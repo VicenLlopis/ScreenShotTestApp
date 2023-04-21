@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.Bundle
-import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 
@@ -15,18 +15,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var imageView: ImageView
     private lateinit var drawingView: DrawingView
+    private lateinit var screenshotBitmap: Bitmap
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        // Crear un objeto Bitmap vacío
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 
         // Crear un ImageView y agregarlo a la vista raíz
         imageView = ImageView(this)
-        imageView.setImageBitmap(bitmap)
         imageView.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -34,17 +32,24 @@ class MainActivity : AppCompatActivity() {
         val rootView = window.decorView.findViewById<ViewGroup>(android.R.id.content)
         rootView.addView(imageView)
 
+        // Tomar una captura de pantalla y mostrarla en el ImageView
+        rootView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                rootView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                screenshotBitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+                val canvasBitmap = Canvas(screenshotBitmap)
+                rootView.draw(canvasBitmap)
+                imageView.setImageBitmap(screenshotBitmap)
+            }
+        })
+
         // Crear un DrawingView y agregarlo encima del ImageView
-        drawingView = createDrawingView(this, null)
+        drawingView = DrawingView(this)
         rootView.addView(drawingView)
-
     }
 
-    fun createDrawingView(context: Context, attrs: AttributeSet?): DrawingView {
-        return DrawingView(context, attrs)
-    }
-
-    inner class DrawingView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+    inner class DrawingView(context: Context) : View(context) {
 
         private val path = Path()
         private val paint = Paint()
@@ -57,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             paint.strokeCap = Paint.Cap.ROUND
         }
 
+        @SuppressLint("ClickableViewAccessibility")
         override fun onTouchEvent(event: MotionEvent): Boolean {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -75,16 +81,8 @@ class MainActivity : AppCompatActivity() {
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
 
-            // Dibujar la captura de pantalla
-            val rootView = window.decorView.findViewById<View>(android.R.id.content)
-            val bitmap = Bitmap.createBitmap(
-                rootView.width, rootView.height, Bitmap.Config.ARGB_8888
-            )
-            val canvasBitmap = Canvas(bitmap)
-            rootView.draw(canvasBitmap)
-            canvas.drawBitmap(bitmap, 0f, 0f, null)
+            canvas.drawBitmap(screenshotBitmap, 0f, 0f, null)
 
-            // Dibujar la línea
             canvas.drawPath(path, paint)
         }
     }
