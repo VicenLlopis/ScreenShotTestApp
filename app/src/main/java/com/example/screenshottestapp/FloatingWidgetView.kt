@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 
-class FloatingWidgetView : ConstraintLayout, View.OnClickListener {
+class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
     constructor(context : Context) : super(context)
     constructor(context : Context, attrs: AttributeSet) : super(context, attrs)
@@ -27,12 +27,14 @@ class FloatingWidgetView : ConstraintLayout, View.OnClickListener {
 
     private var x : Int = 0
     private var y : Int = 315
-
+    private var touchX: Float = 0f
+    private var touchY: Float = 0f
+    private var clickStartTimer: Long = 0
     private val windowManager : WindowManager
 
     init {
         View.inflate(context, R.layout.floating_overlay_button, this)
-        setOnClickListener(this)
+        setOnTouchListener(this)
 
         layoutParams.x = x
         layoutParams.y = y
@@ -41,8 +43,32 @@ class FloatingWidgetView : ConstraintLayout, View.OnClickListener {
         windowManager.addView(this, layoutParams)
     }
 
-    override fun onClick(p0: View?) {
-        context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
+    companion object {
+        private const val CLICK_DELTA = 200
+    }
 
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                clickStartTimer = System.currentTimeMillis()
+
+                x = layoutParams.x
+                y = layoutParams.y
+
+                touchX = event.rawX
+                touchY = event.rawY
+            }
+            MotionEvent.ACTION_UP -> {
+                if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
+                    context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                layoutParams.x = (x + event.rawX - touchX).toInt()
+                layoutParams.y = (y + event.rawY - touchY).toInt()
+                windowManager.updateViewLayout(this, layoutParams)
+            }
+        }
+        return true
     }
 }

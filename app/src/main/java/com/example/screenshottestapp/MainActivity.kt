@@ -2,37 +2,53 @@ package com.example.screenshottestapp
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.*
+import android.hardware.display.DisplayManager
+import android.media.ImageReader
+import android.media.projection.MediaProjection
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.HandlerThread
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.AttributeSet
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
-import com.google.android.material.button.MaterialButton
+import androidx.core.view.ViewCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var drawingView: DrawingView
-    private lateinit var screenshotBitmap: Bitmap
+    private lateinit var drawingView : DrawingView
+    private lateinit var screenshotBitmap : Bitmap
     private lateinit var canvasBitmap : Canvas
-
+    private val IMAGE_WIDTH = 720
+    private val IMAGE_HEIGHT = 1280
+    private  lateinit var mediaProjection : MediaProjection
+    val displayMetrics = Resources.getSystem().displayMetrics
+    private lateinit var imageReader: ImageReader
+    private lateinit var mediaProjectionManager:MediaProjectionManager
+    lateinit var startMediaProjection: ActivityResultLauncher<Intent>
     companion object {
+        private const val SCREEN_CAPTURE_REQUEST_CODE = 1
         private const val DRAW_OVERLAYS_PERMISSION_REQUEST_CODE = 666
         private const   val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
     }
@@ -48,23 +64,9 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE)
         }
 
+        Log.d("Prueba 2","Mensaje para ver si va")
+
         drawingView = findViewById(R.id.imgView)
-
-        // Tomar una captura de pantalla y mostrarla en el ImageView
-        drawingView.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                drawingView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                screenshotBitmap =
-                    Bitmap.createBitmap(drawingView.width, drawingView.height, Bitmap.Config.ARGB_8888)
-                canvasBitmap = Canvas(screenshotBitmap)
-                drawingView.draw(canvasBitmap)
-                Log.d("ScreenShot", "${screenshotBitmap.byteCount}" )
-
-            }
-        })
-
-        // Crear un DrawingView y agregarlo encima del ImageView
 
         // Obtener las referencias a los botones y configurar sus listeners
         val drawButton = findViewById<ImageView>(R.id.button_draw)
@@ -73,25 +75,122 @@ class MainActivity : AppCompatActivity() {
         val minimizeButton = findViewById<ImageView>(R.id.button_widget)
         val exitButton = findViewById<ImageView>(R.id.button_exit)
 
+
         drawButton.setOnClickListener {
             drawingView.enableDrawing(true)
         }
+
         clearButton.setOnClickListener {
             drawingView.clearDrawing()
         }
+
         saveButton.setOnClickListener {
-            guardarPantalla()
+            AlertDialog.Builder(this)
+                .setTitle("Guardar")
+                .setMessage("¿Está seguro de que desea Guardar la imagen?")
+                .setPositiveButton("Sí") { _, _ ->
+                    guardarPantalla()
+                }
+                .setNegativeButton("No", null)
+                .show()
         }
+
         minimizeButton.setOnClickListener {
             startFloatingWidgetMaybe()
             moveTaskToBack(true)
         }
+
         exitButton.setOnClickListener{
-            closeApp()
+            AlertDialog.Builder(this)
+                .setTitle("Salir")
+                .setMessage("¿Está seguro de que desea salir de la aplicación?")
+                .setPositiveButton("Sí") { _, _ ->
+                    closeApp()
+                }
+                .setNegativeButton("No", null)
+                .show()
         }
     }
 
+    @SuppressLint("WrongConstant")
     private fun guardarPantalla() {
+
+        startMediaProjection = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                mediaProjection = mediaProjectionManager
+                    .getMediaProjection(result.resultCode, result.data!!)
+                Log.d("Prueba 1", "Mensaje para ver si va")
+            }
+        }
+        /*
+        screenshotBitmap = Bitmap.createBitmap(rootView.measuredWidth, rootView.measuredHeight, Bitmap.Config.ARGB_8888)
+         canvasBitmap = Canvas(screenshotBitmap)
+         val bgDrawable = view.background
+         if(bgDrawable != null){
+             bgDrawable.draw(canvasBitmap)
+         }else{
+             canvasBitmap.drawColor(Color.WHITE)
+         }
+         view.draw(canvasBitmap)*/
+        /*val deviceCapture = DeviceCapture()
+
+        // Obtiene la imagen capturada de la pantalla
+        val capturedImage = deviceCapture.captureScreen()*/
+       // val bitmap = captureToBitmap()
+        /*val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "captura-de-pantalla.png")
+        val outputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        outputStream.flush()
+        outputStream.close()*/
+
+        /*
+        mediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
+
+
+
+        startMediaProjection.launch(mediaProjectionManager.createScreenCaptureIntent())
+        val width = Resources.getSystem().displayMetrics.widthPixels
+        val height = Resources.getSystem().displayMetrics.heightPixels
+        val imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1)
+
+        // Crea un VirtualDisplay para capturar la pantalla
+        val surface = imageReader.surface
+        val virtualDisplay = mediaProjection.createVirtualDisplay(
+            "ScreenCapture",
+            width,
+            height,
+            displayMetrics.densityDpi,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            surface,
+            null,
+            null
+        )
+
+        // Espera a que se capture la pantalla
+        Thread.sleep(1000) // Espera 1 segundo para que la pantalla se capture
+
+        // Obtiene la imagen capturada del ImageReader
+        val image = imageReader.acquireLatestImage()
+
+        // Convierte la imagen en un Bitmap
+        val planes = image.planes
+        val buffer = planes[0].buffer
+        val pixelStride = planes[0].pixelStride
+        val rowStride = planes[0].rowStride
+        val rowPadding = rowStride - pixelStride * width
+        screenshotBitmap = Bitmap.createBitmap(
+            width + rowPadding / pixelStride,
+            height,
+            Bitmap.Config.ARGB_8888
+        )
+        screenshotBitmap.copyPixelsFromBuffer(buffer)
+
+// Libera la imagen y el VirtualDisplay
+        image.close()
+        virtualDisplay.release()
+
 
         val imageFileName = "my_image.png"
         val contentValues = ContentValues().apply {
@@ -109,15 +208,18 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "No se pudo guardar el fondo de pantalla", Toast.LENGTH_SHORT).show()
-        }
+        }*/
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
         if (requestCode == DRAW_OVERLAYS_PERMISSION_REQUEST_CODE && isDrawOverlaysAllowed()) {
             Toast.makeText(this, "Granted permissions for drawing over apps", Toast.LENGTH_SHORT).show()
             startFloatingWidgetMaybe()
         }
+
+
     }
 
     override fun onStart() {
@@ -153,9 +255,7 @@ class MainActivity : AppCompatActivity() {
         Settings.canDrawOverlays(this)
 }
 
-
-    class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs)
-{
+class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         private var path = Path()
         private val paint = Paint().apply {
             isAntiAlias = true
@@ -200,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             }
             return false
         }
+}
 
-    }
 
 
