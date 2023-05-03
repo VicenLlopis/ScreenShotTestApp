@@ -32,9 +32,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import eu.bolt.screenshotty.*
+import eu.bolt.screenshotty.util.ScreenshotFileSaver
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var drawingView : DrawingView
@@ -47,10 +50,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageReader: ImageReader
     private lateinit var mediaProjectionManager:MediaProjectionManager
     lateinit var startMediaProjection: ActivityResultLauncher<Intent>
+    private lateinit var screenshotManager : ScreenshotManager
+
     companion object {
+        private const val REQUEST_SCREENSHOT_PERMISSION = 888
         private const val SCREEN_CAPTURE_REQUEST_CODE = 1
         private const val DRAW_OVERLAYS_PERMISSION_REQUEST_CODE = 666
-        private const   val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
+        private const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
     }
 
     @SuppressLint("ClickableViewAccessibility", "InflateParams", "MissingInflatedId",
@@ -115,105 +121,37 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("WrongConstant")
     private fun guardarPantalla() {
 
-        startMediaProjection = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == RESULT_OK) {
-                mediaProjection = mediaProjectionManager
-                    .getMediaProjection(result.resultCode, result.data!!)
-                Log.d("Prueba 1", "Mensaje para ver si va")
-            }
-        }
-        /*
-        screenshotBitmap = Bitmap.createBitmap(rootView.measuredWidth, rootView.measuredHeight, Bitmap.Config.ARGB_8888)
-         canvasBitmap = Canvas(screenshotBitmap)
-         val bgDrawable = view.background
-         if(bgDrawable != null){
-             bgDrawable.draw(canvasBitmap)
-         }else{
-             canvasBitmap.drawColor(Color.WHITE)
-         }
-         view.draw(canvasBitmap)*/
-        /*val deviceCapture = DeviceCapture()
+        screenshotManager = ScreenshotManagerBuilder(this)
+            .withCustomActionOrder(ScreenshotActionOrder.pixelCopyFirst()) //optional, ScreenshotActionOrder.pixelCopyFirst() by default
+            .withPermissionRequestCode(REQUEST_SCREENSHOT_PERMISSION) //optional, 888 by default
+            .build()
 
-        // Obtiene la imagen capturada de la pantalla
-        val capturedImage = deviceCapture.captureScreen()*/
-       // val bitmap = captureToBitmap()
-        /*val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "captura-de-pantalla.png")
-        val outputStream = FileOutputStream(file)
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-        outputStream.flush()
-        outputStream.close()*/
-
-        /*
-        mediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
-
-
-
-        startMediaProjection.launch(mediaProjectionManager.createScreenCaptureIntent())
-        val width = Resources.getSystem().displayMetrics.widthPixels
-        val height = Resources.getSystem().displayMetrics.heightPixels
-        val imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1)
-
-        // Crea un VirtualDisplay para capturar la pantalla
-        val surface = imageReader.surface
-        val virtualDisplay = mediaProjection.createVirtualDisplay(
-            "ScreenCapture",
-            width,
-            height,
-            displayMetrics.densityDpi,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            surface,
-            null,
-            null
+        val screenshotResult = screenshotManager.makeScreenshot()
+        screenshotResult.observe(
+            onSuccess = { writeToFile(it)
+                        Log.d("Prueba Guardar","aaaaaaa")},
+            onError = {  }
         )
 
-        // Espera a que se capture la pantalla
-        Thread.sleep(1000) // Espera 1 segundo para que la pantalla se capture
 
-        // Obtiene la imagen capturada del ImageReader
-        val image = imageReader.acquireLatestImage()
+    }
+    fun writeToFile(screenshot: Screenshot): File {
 
-        // Convierte la imagen en un Bitmap
-        val planes = image.planes
-        val buffer = planes[0].buffer
-        val pixelStride = planes[0].pixelStride
-        val rowStride = planes[0].rowStride
-        val rowPadding = rowStride - pixelStride * width
-        screenshotBitmap = Bitmap.createBitmap(
-            width + rowPadding / pixelStride,
-            height,
-            Bitmap.Config.ARGB_8888
-        )
-        screenshotBitmap.copyPixelsFromBuffer(buffer)
+        val fileSaver = ScreenshotFileSaver.create(Bitmap.CompressFormat.PNG)
+        val targetFile = File( Environment.getExternalStorageDirectory(), "Pictures/screenshot.jpg")
+        fileSaver.saveToFile(targetFile, screenshot)
+        return targetFile
+    }
 
-// Libera la imagen y el VirtualDisplay
-        image.close()
-        virtualDisplay.release()
-
-
-        val imageFileName = "my_image.png"
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-            put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+    fun show(screenshot: Screenshot) {
+        screenshotBitmap = when (screenshot) {
+            is ScreenshotBitmap -> screenshot.bitmap
         }
-
-        val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-        if (imageUri != null) {
-            contentResolver.openOutputStream(imageUri).use { outputStream ->
-                screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                Toast.makeText(this, "Fondo de pantalla guardado en la galería de fotos", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "No se pudo guardar el fondo de pantalla", Toast.LENGTH_SHORT).show()
-        }*/
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
+        screenshotManager.onActivityResult(requestCode, resultCode, data)
         if (requestCode == DRAW_OVERLAYS_PERMISSION_REQUEST_CODE && isDrawOverlaysAllowed()) {
             Toast.makeText(this, "Granted permissions for drawing over apps", Toast.LENGTH_SHORT).show()
             startFloatingWidgetMaybe()
