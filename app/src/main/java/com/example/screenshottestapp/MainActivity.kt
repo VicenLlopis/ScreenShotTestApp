@@ -32,6 +32,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import com.jraska.falcon.Falcon
 import eu.bolt.screenshotty.*
 import eu.bolt.screenshotty.util.ScreenshotFileSaver
 import java.io.File
@@ -121,17 +122,28 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("WrongConstant")
     private fun guardarPantalla() {
 
-        screenshotManager = ScreenshotManagerBuilder(this)
-            .withCustomActionOrder(ScreenshotActionOrder.pixelCopyFirst()) //optional, ScreenshotActionOrder.pixelCopyFirst() by default
-            .withPermissionRequestCode(REQUEST_SCREENSHOT_PERMISSION) //optional, 888 by default
-            .build()
+        val file = File(Environment.getExternalStorageDirectory(), "Pictures/screenshot.png")
+        Falcon.takeScreenshot(this, file)
+        // Take bitmap and do whatever you want
+        screenshotBitmap = Falcon.takeScreenshotBitmap(this)
 
-        val screenshotResult = screenshotManager.makeScreenshot()
-        screenshotResult.observe(
-            onSuccess = { writeToFile(it)
-                        Log.d("Prueba Guardar","aaaaaaa")},
-            onError = {  }
-        )
+        val imageFileName = "my_image.png"
+         val contentValues = ContentValues().apply {
+             put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName)
+             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+             put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
+             put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+         }
+
+         val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+         if (imageUri != null) {
+             contentResolver.openOutputStream(imageUri).use { outputStream ->
+                 screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                 Toast.makeText(this, "Fondo de pantalla guardado en la galería de fotos", Toast.LENGTH_SHORT).show()
+             }
+         } else {
+             Toast.makeText(this, "No se pudo guardar el fondo de pantalla", Toast.LENGTH_SHORT).show()
+         }
 
 
     }
@@ -143,11 +155,6 @@ class MainActivity : AppCompatActivity() {
         return targetFile
     }
 
-    fun show(screenshot: Screenshot) {
-        screenshotBitmap = when (screenshot) {
-            is ScreenshotBitmap -> screenshot.bitmap
-        }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
