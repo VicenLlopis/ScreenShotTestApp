@@ -2,15 +2,15 @@ package com.example.screenshottestapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.ActivityManager
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-import android.content.res.Resources
 import android.graphics.*
+import android.hardware.display.DisplayManager
+import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -19,30 +19,32 @@ import android.os.*
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.AttributeSet
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.activity.result.ActivityResultLauncher
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import eu.bolt.screenshotty.*
-import eu.bolt.screenshotty.util.ScreenshotFileSaver
-import java.io.File
+import java.nio.ByteBuffer
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var drawingView : DrawingView
-    private lateinit var screenshotManager : ScreenshotManager
-    private lateinit var screenshotBitmap : Bitmap
+
+
 
     companion object {
-        private const val REQUEST_SCREENSHOT_PERMISSION = 888
         private const val DRAW_OVERLAYS_PERMISSION_REQUEST_CODE = 666
         private const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
     }
+
+    private val REQUEST_MEDIA_PROJECTION = 1
+
+
 
     @SuppressLint("ClickableViewAccessibility", "InflateParams", "MissingInflatedId",
         "ResourceType", "UseCompatLoadingForDrawables"
@@ -54,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE)
         }
+
+
 
         drawingView = findViewById(R.id.imgView)
 
@@ -78,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                 .setMessage("¿Está seguro de que desea Guardar la imagen?")
                 .setPositiveButton("Sí") { _, _ ->
 
-                    guardarPantalla()
+
                 }
                 .setNegativeButton("No", null)
                 .show()
@@ -101,61 +105,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     @SuppressLint("WrongConstant")
-    private fun guardarPantalla() {
-        screenshotManager = ScreenshotManagerBuilder(this)
-            .withCustomActionOrder(ScreenshotActionOrder.mediaProjectionFirst()) //optional, ScreenshotActionOrder.pixelCopyFirst() by default
-            .withPermissionRequestCode(REQUEST_SCREENSHOT_PERMISSION)
-            .build()
 
-        val screenshotResult = screenshotManager.makeScreenshot()
-        screenshotResult.observe(
-            onSuccess = { //writeToFile(it)
-                        Log.d("Prueba Guardar","aaaaaaa")
-                show(it)
-                        },
-            onError = {  }
-        )
-
-    }
-
-    private fun writeToFile(screenshot: Screenshot): File {
-        val fileSaver = ScreenshotFileSaver.create(Bitmap.CompressFormat.PNG)
-        val targetFile = File( Environment.getExternalStorageDirectory(), "Pictures/screenshot.jpg")
-        fileSaver.saveToFile(targetFile, screenshot)
-        return targetFile
-    }
-
-    fun show(screenshot: Screenshot) {
-        screenshotBitmap = when (screenshot) {
-            is ScreenshotBitmap -> screenshot.bitmap
-        }
-        val imageFileName = "my_image.png"
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-            put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
-        }
-
-        val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-        if (imageUri != null) {
-            contentResolver.openOutputStream(imageUri).use { outputStream ->
-                screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                Toast.makeText(this, "Fondo de pantalla guardado en la galería de fotos", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "No se pudo guardar el fondo de pantalla", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
+        Log.d("Prueba guardar0","Guarda captura")
+
+
+
         if (requestCode == DRAW_OVERLAYS_PERMISSION_REQUEST_CODE && isDrawOverlaysAllowed()) {
+            Log.d("Prueba guardar1","Guarda captura")
+
             Toast.makeText(this, "Granted permissions for drawing over apps", Toast.LENGTH_SHORT).show()
             startFloatingWidgetMaybe()
         }
-            screenshotManager.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onStart() {
