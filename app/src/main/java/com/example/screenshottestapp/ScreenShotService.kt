@@ -1,59 +1,97 @@
 package com.example.screenshottestapp
 
 import android.annotation.SuppressLint
-import android.app.Service
+import android.app.*
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.*
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.hardware.display.DisplayManager
+import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import android.os.Handler
-import android.os.IBinder
+import android.os.*
 import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
-import androidx.core.app.ActivityCompat.startActivityForResult
+import kotlinx.coroutines.*
+import java.io.File
+import kotlin.random.Random
 
 class ScreenShotService : Service() {
 
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private lateinit var mediaProjection: MediaProjection
-    private lateinit var screenshotBitmap : Bitmap
+    private var resultCode = 0
+    private var resultData: Intent? = null
+    private lateinit var fileName : String
+
 
 
     companion object {
-        private const val REQUEST_SCREENSHOT_PERMISSION = 888
+
+        const val ACTION_SCREENSHOT_SERVICE_DESTROYED =
+            "com.example.ACTION_SCREENSHOT_SERVICE_DESTROYED"
+        const val EXTRA_RESULT_CODE = "resultCode"
+        const val EXTRA_RESULT_INTENT = "resultIntent"
+        private const val ONGOING_NOTIFICATION_ID = 123
+        private const val CHANNEL_DEFAULT_IMPORTANCE = "1"
 
     }
 
     override fun onCreate() {
-        super.onCreate()
 
-        mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        val permissionIntent = mediaProjectionManager.createScreenCaptureIntent()
-        startActivityForResult(permissionIntent,
-            REQUEST_SCREENSHOT_PERMISSION)
 
+        Intent(this, MainActivity::class.java).let { notificationIntent ->
+            PendingIntent.getActivity(
+                this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        createNotification()
+
+        mediaProjectionManager =
+            getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
     }
 
-    private fun startActivityForResult(permissionIntent: Intent?, requestScreenshotPermission: Int) {
+    private fun createNotification() {
 
-        if (requestScreenshotPermission == REQUEST_SCREENSHOT_PERMISSION) {
-            mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            mediaProjection = mediaProjectionManager.getMediaProjection(requestScreenshotPermission, permissionIntent!!)
-        }
+        val serviceChannel = NotificationChannel(
+            CHANNEL_DEFAULT_IMPORTANCE, "1", NotificationManager.IMPORTANCE_DEFAULT
+        )
+
+        val manager = getSystemService(
+            NotificationManager::class.java
+        )
+
+        manager.createNotificationChannel(serviceChannel)
+
+    }
+
+    private fun showNotification() {
+        val notificationIntent = Intent(this, MainActivity::class.java)
+
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent, 0
+        )
+        val notification: Notification = Notification.Builder(this, CHANNEL_DEFAULT_IMPORTANCE)
+            .setContentTitle("Service Screenshot").setContentText("Service Screenshot")
+            .setSmallIcon(R.drawable.ic_launcher_foreground).setContentIntent(pendingIntent).build()
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification)
     }
 
     @SuppressLint("WrongConstant")
-    private fun guardarPantalla()
-    {
+    private fun takeScreenshot() {
+        Log.d("Prueba Error Pantalla", "1")
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = windowManager.defaultDisplay
         val metrics = DisplayMetrics()
         display.getMetrics(metrics)
@@ -62,67 +100,126 @@ class ScreenShotService : Service() {
         val mWidth = size.x
         val mHeight = size.y
         val mDensity = metrics.densityDpi
-        val mImageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2)
+        val mImageReader: ImageReader =
+            ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2)
         val handler = Handler()
 
-        val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
+        val flags =
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
+        Log.d("Prueba Error Pantalla", "2")
 
         mediaProjection.createVirtualDisplay(
-            "screen-mirror",
-            mWidth,
-            mHeight,
-            mDensity,
-            flags,
-            mImageReader.surface,
-            null,
-            handler
+            "screen-mirror", mWidth, mHeight, mDensity, flags, mImageReader.surface, null, handler
         )
+        Log.d("Prueba Error Pantalla", "3")
+        Log.d("Prueba Error Pantalla", "$mImageReader")
 
-        mImageReader.setOnImageAvailableListener({ reader ->
-            reader.setOnImageAvailableListener(null, handler)
-            val image = reader.acquireLatestImage()
-            val planes = image.planes
-            val buffer = planes[0].buffer
-            val pixelStride = planes[0].pixelStride
-            val rowStride = planes[0].rowStride
-            val rowPadding = rowStride - pixelStride * metrics.widthPixels
-            // create bitmap
 
-            val bmp = Bitmap.createBitmap(
-                metrics.widthPixels + (rowPadding.toFloat() / pixelStride.toFloat()).toInt(),
-                metrics.heightPixels,
-                Bitmap.Config.ARGB_8888
+        var image: Image? = null
+        var cont = 0
+        while (image == null || cont == 5) {
+            Log.d("PRUEBATEST", "cont: $cont")
+            Thread.sleep(300)
+            image = mImageReader.acquireLatestImage()
+            cont++
+        }
+
+        if (image == null) {
+            mImageReader.close()
+            mediaProjection.stop()
+            stopSelf()
+            Toast.makeText(
+                this, R.string.string_Error_screenshot, Toast.LENGTH_SHORT
+            ).show()
+
+
+        } else {
+            val bitmap = Bitmap.createBitmap(
+                image.width, image.height, Bitmap.Config.ARGB_8888
             )
+            bitmap.copyPixelsFromBuffer(image.planes[0].buffer)
 
-            bmp.copyPixelsFromBuffer(buffer)
-            screenshotBitmap = Bitmap.createBitmap(bmp, 0, 0, metrics.widthPixels, bmp.height)
-            Log.d("Prueba guardar0","Bystes de el bitmap ${screenshotBitmap.byteCount}")
-            bmp.recycle()
             image.close()
-            reader.close()
+            mImageReader.close()
+            saveScreenshotToGallery(this, bitmap)
 
-            val imageFileName = "my_image.png"
+            mediaProjection.stop()
+            stopSelf()
+        }
+    }
+
+    private fun saveScreenshotToGallery(context: Context, screenshotBitmap: Bitmap) {
+        val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val marcadorDirectory = File(directory, "Marcador")
+        marcadorDirectory.mkdirs()
+        val relativeLocation = Environment.DIRECTORY_PICTURES + File.separator + "Marcador"
+
+        GlobalScope.launch(Dispatchers.IO) {
+            mediaProjection.stop()
             val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, imageFileName)
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
                 put(MediaStore.Images.Media.MIME_TYPE, "image/png")
                 put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
                 put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+                put(MediaStore.Images.Media.RELATIVE_PATH, relativeLocation)
             }
 
-            val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            val imageUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
             if (imageUri != null) {
-                contentResolver.openOutputStream(imageUri).use { outputStream ->
+                context.contentResolver.openOutputStream(imageUri).use { outputStream ->
                     screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                    Toast.makeText(this, "Fondo de pantalla guardado en la galería de fotos", Toast.LENGTH_SHORT).show()
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context, R.string.string_Save_OK, Toast.LENGTH_SHORT
+                    ).show()
+
+                    //restart()
                 }
             } else {
-                Toast.makeText(this, "No se pudo guardar el fondo de pantalla", Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context, R.string.string_Save_ERROR, Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-        }, handler)
+        }
     }
 
 
-    override fun onBind(p0: Intent?): IBinder? {
-        TODO("Not yet implemented")
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Log.d("TestFIlENAME","Entra onStartCommand")
+         fileName = intent.getStringExtra("fileName").toString()
+        Log.d("TestFIlENAME","File name: $fileName")
+
+        showNotification()
+
+        if (intent.action == null) {
+
+            resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, resultCode)
+            resultData = intent.getParcelableExtra(EXTRA_RESULT_INTENT)
+
+            Log.d("TestMediaProjection","$resultCode, $resultData")
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, resultData!!)
+
+
+            takeScreenshot()
+        }
+        return START_NOT_STICKY
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        // We don't provide binding, so return null
+        return null
+    }
+
+    override fun onDestroy() {
+        mediaProjection.stop()
+
+        val broadcastIntent = Intent().apply {
+            action = ACTION_SCREENSHOT_SERVICE_DESTROYED
+        }
+        sendBroadcast(broadcastIntent)
     }
 }
+

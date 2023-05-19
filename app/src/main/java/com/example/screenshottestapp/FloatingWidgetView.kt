@@ -7,15 +7,16 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
+
 
 class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
-    constructor(context : Context) : super(context)
-    constructor(context : Context, attrs: AttributeSet) : super(context, attrs)
-    constructor(context : Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
+        context, attrs, defStyleAttr
+    )
 
     private val layoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -25,12 +26,12 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
         PixelFormat.TRANSLUCENT
     )
 
-    private var x : Int = 0
-    private var y : Int = 315
+    private var x: Int = 0
+    private var y: Int = 0
     private var touchX: Float = 0f
     private var touchY: Float = 0f
     private var clickStartTimer: Long = 0
-    private val windowManager : WindowManager
+    private val windowManager: WindowManager
 
     init {
         View.inflate(context, R.layout.floating_overlay_button, this)
@@ -60,7 +61,11 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
             }
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
-                    context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
+                    val intent = Intent(context, MainActivity::class.java)
+                    intent.flags =
+                        (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    context.startActivity(intent)
+                    //context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
                 }
             }
             MotionEvent.ACTION_MOVE -> {

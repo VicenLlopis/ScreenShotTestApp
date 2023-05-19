@@ -24,8 +24,6 @@ class FloatingWidgetService : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if(::windowManager.isInitialized) windowManager.removeView(floatingWidgetView)
+        if (::windowManager.isInitialized) windowManager.removeView(floatingWidgetView)
     }
-
-
 }

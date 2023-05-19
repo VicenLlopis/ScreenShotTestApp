@@ -15,49 +15,62 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        tools:ignore="MissingConstraints"/>
+        app:layout_constraintVertical_bias="1.0"
+        tools:ignore="MissingConstraints" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16.dp"
+        android:layout_width="185dp"
+        android:layout_height="35dp"
         android:background="@drawable/radio_corner"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.945">
 
         <ImageView
             android:id="@+id/button_draw"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
             android:background="@drawable/ic_pensil" />
 
         <ImageView
             android:id="@+id/button_clear"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
             android:background="@drawable/ic_delete" />
 
         <ImageView
             android:id="@+id/button_widget"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
             android:background="@drawable/ic_widget" />
 
         <ImageView
             android:id="@+id/button_save"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
             android:background="@drawable/ic_save" />
 
         <ImageView
+            android:id="@+id/button_QR"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
+            android:background="@drawable/ic_qr" />
+
+        <ImageView
             android:id="@+id/button_exit"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginHorizontal="1dp"
             android:background="@drawable/ic_exit" />
     </LinearLayout>
 

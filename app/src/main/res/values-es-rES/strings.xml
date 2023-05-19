@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScreenShotTestApp</string>
+    <string name="string_1">¿Desea salir de la aplicacion?</string>
+    <string name="string_Acept">Aceptar</string>
+    <string name="string_Cancel">Cancelar</string>
+    <string name="string_Save">¿Desea Guardar la captura de pantalla?</string>
+    <string name="string_Error_screenshot">Error al intentar capturar la pantalla</string>
+    <string name="string_Save_OK">Captura de pantalla guardado en la galería de fotos</string>
+    <string name="string_Save_ERROR">No se ha podido guardar la captura </string>
+    <string name="img_name">Nombre de la imagen:</string>
+    <string name="img_path">Ruta del Archivo:</string>
+</resources>

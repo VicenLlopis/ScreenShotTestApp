@@ -16,10 +16,13 @@
         <item name="iconPadding">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="android:paddingLeft">12dp</item>
-        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
         <item name="android:minWidth">48dp</item>
         <item name="android:minHeight">48dp</item>
     </style>
 
+    <style name="DialogAlertStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/notification_style</item>
+    </style>
 </resources>

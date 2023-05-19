@@ -1,6 +1,14 @@
 <resources>
+
     <string name="app_name">ScreenShotTestApp</string>
-    <string name="string_1">Quires salir de la aplicacion?</string>
-    <string name="string_Aceptar">Aceptar</string>
-    <string name="string_Cancelar">Cancelar</string>
+    <string name="string_1">Do you want to exit the application?</string>
+    <string name="string_Acept">Acept</string>
+    <string name="string_Cancel">Cancel</string>
+    <string name="string_Save">Do you want to save the Screen?</string>
+    <string name="string_Error_screenshot">Error trying to capture screen</string>
+    <string name="string_Save_OK">Sceenshot Saved </string>
+    <string name="string_Save_ERROR">Failed to save capture </string>
+    <string name="img_name">Image name :</string>
+    <string name="img_path">Image Path:</string>
+
 </resources>
