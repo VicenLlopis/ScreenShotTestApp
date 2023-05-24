@@ -10,5 +10,7 @@
     <string name="string_Save_ERROR">Failed to save capture </string>
     <string name="img_name">Image name :</string>
     <string name="img_path">Image Path:</string>
+    <string name="base64_qr_ok">Screenshot to Base64</string>
+
 
 </resources>

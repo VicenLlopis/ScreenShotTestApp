@@ -27,7 +27,7 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
     )
 
     private var x: Int = 0
-    private var y: Int = 0
+    private var y: Int = 800
     private var touchX: Float = 0f
     private var touchY: Float = 0f
     private var clickStartTimer: Long = 0

@@ -2,14 +2,12 @@
     <!-- Base application theme. -->
     <style name="Theme.AppCompat.Transparent.NoActionBar"
         parent="Theme.MaterialComponents.DayNight.NoActionBar">
-
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-
     </style>
 
     <style name="ToggleButtonWithIconOnly" parent="Widget.MaterialComponents.Button.OutlinedButton">
@@ -25,4 +23,25 @@
     <style name="DialogAlertStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowBackground">@drawable/notification_style</item>
     </style>
+
+    <style name="DialogColorPicker" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:layout_height">300dp</item>
+        <item name="android:layout_width">300dp</item>
+        <item name="android:scaleX">0.95</item>
+        <item name="android:scaleY">0.95</item>
+        <item name="buttonBarPositiveButtonStyle">@style/ButtonsDialogSyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/ButtonsDialogSyle</item>
+    </style>
+
+    <style name="ButtonsDialogSyle" parent="DialogColorPicker">
+        <item name="android:background">@drawable/abc_btn_default_mtrl_shape</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceButton</item>
+        <item name="android:minHeight">48dip</item>
+        <item name="android:minWidth">88dip</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:textColor">#3A393A</item>
+        <item name="android:gravity">center_vertical|center_horizontal</item>
+    </style>
+
 </resources>

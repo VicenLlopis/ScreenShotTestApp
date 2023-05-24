@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_gravity="center"
+
+    android:orientation="vertical">
+
+    <com.skydoves.colorpickerview.ColorPickerView
+        android:id="@+id/colorPickerView"
+        android:layout_width="150dp"
+        android:layout_weight="1"
+        android:layout_gravity="center"
+        android:layout_height="150dp"
+        android:layout_marginVertical="15dp"
+        />
+
+    <com.skydoves.colorpickerview.sliders.AlphaSlideBar
+        android:id="@+id/alphaSlideBar"
+        android:layout_width="200dp"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        app:selector_AlphaSlideBar="@drawable/wheel"
+        app:borderColor_AlphaSlideBar="@android:color/darker_gray"
+        app:borderSize_AlphaSlideBar="5"/>
+
+
+
+
+    <com.skydoves.colorpickerview.sliders.BrightnessSlideBar
+        android:id="@+id/brightnessSlide"
+        android:layout_gravity="center"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        app:selector_BrightnessSlider="@drawable/wheel"
+        app:borderColor_BrightnessSlider="@android:color/darker_gray"
+        app:borderSize_BrightnessSlider="5"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:text="Stroke: "
+        android:textColor="#333232"
+        android:textSize="16sp" />
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_gravity="center">
+
+        <ImageView
+            android:id="@+id/bttn_stroke_S"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/pen_size_1px"/>
+        <ImageView
+            android:id="@+id/bttn_stroke_M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:src="@drawable/pen_size_3px"/>
+
+        <ImageView
+            android:id="@+id/bttn_stroke_L"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/pen_size_4px"/>
+
+    </LinearLayout>
+
+
+    <Button
+        android:id="@+id/bttn_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginRight="5dp"
+        android:text="Accept" />
+
+</LinearLayout>

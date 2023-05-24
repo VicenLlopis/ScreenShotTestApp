@@ -10,4 +10,5 @@
     <string name="string_Save_ERROR">No se ha podido guardar la captura </string>
     <string name="img_name">Nombre de la imagen:</string>
     <string name="img_path">Ruta del Archivo:</string>
+    <string name="base64_qr_ok">Captura a Base64</string>
 </resources>
