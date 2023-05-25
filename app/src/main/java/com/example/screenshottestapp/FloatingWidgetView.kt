@@ -34,6 +34,7 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
     private val windowManager: WindowManager
 
     init {
+
         View.inflate(context, R.layout.floating_overlay_button, this)
         setOnTouchListener(this)
 
@@ -42,6 +43,7 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         windowManager.addView(this, layoutParams)
+
     }
 
     companion object {
@@ -61,11 +63,11 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
             }
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
-                    val intent = Intent(context, MainActivity::class.java)
+                  /* val intent = Intent(context, MainActivity::class.java)
                     intent.flags =
                         (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    context.startActivity(intent)
-                    //context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
+                    context.startActivity(intent)*/
+                    context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
                 }
             }
             MotionEvent.ACTION_MOVE -> {

@@ -26,6 +26,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
@@ -42,5 +43,5 @@ dependencies {
     implementation 'com.google.zxing:zxingorg:3.4.0'
     implementation 'com.google.zxing:core:3.4.1'
     implementation "com.github.skydoves:colorpickerview:2.2.4"
-
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

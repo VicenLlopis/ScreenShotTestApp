@@ -135,7 +135,6 @@ class ScreenShotService : Service() {
                 this, R.string.string_Error_screenshot, Toast.LENGTH_SHORT
             ).show()
 
-
         } else {
             val bitmap = Bitmap.createBitmap(
                 image.width, image.height, Bitmap.Config.ARGB_8888
