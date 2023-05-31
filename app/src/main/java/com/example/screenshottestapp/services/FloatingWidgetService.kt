@@ -1,10 +1,10 @@
-package com.example.screenshottestapp
+package com.example.screenshottestapp.services
 
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.view.WindowManager
+import com.example.screenshottestapp.views.FloatingWidgetView
 
 class FloatingWidgetService : Service() {
 
@@ -13,7 +13,7 @@ class FloatingWidgetService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         floatingWidgetView = FloatingWidgetView(this)
     }
 

@@ -34,14 +34,14 @@
         </activity>
 
         <service
-            android:name=".FloatingWidgetService"
+            android:name=".services.FloatingWidgetService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".ScreenShotService"
+            android:name=".services.ScreenShotService"
             android:foregroundServiceType="mediaProjection" />
         <service
-            android:name=".ScreenShotQrService"
+            android:name=".services.ScreenShotQrService"
             android:foregroundServiceType="mediaProjection" />
     </application>
 

@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="450dp"
     android:layout_height="wrap_content"
     android:background="@color/white"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="center"
+    android:orientation="horizontal">
 
-    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
 
     <com.skydoves.colorpickerview.ColorPickerView
         android:id="@+id/colorPickerView"
@@ -37,56 +42,86 @@
         app:selector_BrightnessSlider="@drawable/wheel"
         app:borderColor_BrightnessSlider="@android:color/darker_gray"
         app:borderSize_BrightnessSlider="2"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:text="Stroke: "
-        android:textColor="#333232"
-        android:textSize="16sp" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_gravity="center">
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="16dp"
+        android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/bttn_stroke_S"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:outlineProvider="paddedBounds"
-            android:src="@drawable/pen_size_1px"
-            android:background="@color/transparent"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:text="Stroke: "
+            android:textColor="#333232"
+            android:textSize="16sp" />
 
-        <ImageButton
-            android:id="@+id/bttn_stroke_M"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginHorizontal="20dp"
-            android:outlineProvider="paddedBounds"
-            android:src="@drawable/pen_size_3px"
-            android:background="@color/transparent" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="20dp">
 
-        <ImageButton
-            android:id="@+id/bttn_stroke_L"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:outlineProvider="paddedBounds"
-            android:background="@color/transparent"
-            android:src="@drawable/pen_size_4px"/>
+            <ImageButton
+                android:id="@+id/bttn_stroke_S"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/transparent"
+                android:outlineProvider="paddedBounds"
+                android:src="@drawable/pen_size_1px"
+                />
 
+
+            <ImageButton
+                android:id="@+id/bttn_stroke_M"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginHorizontal="20dp"
+                android:background="@color/transparent"
+                android:outlineProvider="paddedBounds"
+                android:src="@drawable/pen_size_3px" />
+
+            <ImageButton
+                android:id="@+id/bttn_stroke_L"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/transparent"
+                android:outlineProvider="paddedBounds"
+                android:src="@drawable/pen_size_4px" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginTop="40dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/bttn_picker_Cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:width="40dp"
+                android:height="5dp"
+
+                android:text="Accept"
+                android:textSize="10sp" />
+
+            <Button
+                android:id="@+id/bttn_picker_OK"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:width="40dp"
+                android:height="5dp"
+                android:text="Accept"
+                android:textSize="10sp" />
+
+        </LinearLayout>
     </LinearLayout>
-
-
-    <Button
-        android:id="@+id/bttn_picker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:layout_marginRight="5dp"
-        android:text="Accept"/>
-
 </LinearLayout>

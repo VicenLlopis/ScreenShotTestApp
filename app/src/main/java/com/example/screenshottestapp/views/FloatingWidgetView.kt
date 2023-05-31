@@ -1,4 +1,4 @@
-package com.example.screenshottestapp
+package com.example.screenshottestapp.views
 
 import android.content.Context
 import android.content.Intent
@@ -8,7 +8,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.constraintlayout.widget.ConstraintLayout
-
+import com.example.screenshottestapp.MainActivity
+import com.example.screenshottestapp.R
 
 class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
@@ -32,10 +33,11 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
     private var touchY: Float = 0f
     private var clickStartTimer: Long = 0
     private val windowManager: WindowManager
+    private var widgetopen =false
 
     init {
 
-        View.inflate(context, R.layout.floating_overlay_button, this)
+        inflate(context, R.layout.floating_overlay_button, this)
         setOnTouchListener(this)
 
         layoutParams.x = x
@@ -63,11 +65,12 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
             }
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
-                  /* val intent = Intent(context, MainActivity::class.java)
+                    widgetopen=true
+                   val intent = Intent(context, MainActivity::class.java)
+                       intent.putExtra("widgetOpen",widgetopen)
                     intent.flags =
                         (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    context.startActivity(intent)*/
-                    context.startActivity(context.packageManager.getLaunchIntentForPackage(context.packageName))
+                    context.startActivity(intent)
                 }
             }
             MotionEvent.ACTION_MOVE -> {
