@@ -17,6 +17,7 @@ import android.os.Environment
 import android.os.Handler
 import android.os.IBinder
 import android.provider.MediaStore
+import android.util.Base64
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
@@ -27,7 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 
 class ScreenShotService : Service() {
 
@@ -36,7 +39,8 @@ class ScreenShotService : Service() {
     private var resultCode = 0
     private var resultData: Intent? = null
     private lateinit var fileName : String
-
+    private var isQR= false
+    private var isSave=false
 
 
     companion object {
@@ -51,8 +55,6 @@ class ScreenShotService : Service() {
     }
 
     override fun onCreate() {
-
-
         Intent(this, MainActivity::class.java).let { notificationIntent ->
             PendingIntent.getActivity(
                 this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
@@ -63,11 +65,9 @@ class ScreenShotService : Service() {
 
         mediaProjectionManager =
             getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-
     }
 
     private fun createNotification() {
-
         val serviceChannel = NotificationChannel(
             CHANNEL_DEFAULT_IMPORTANCE, "1", NotificationManager.IMPORTANCE_DEFAULT
         )
@@ -77,7 +77,6 @@ class ScreenShotService : Service() {
         )
 
         manager.createNotificationChannel(serviceChannel)
-
     }
 
     private fun showNotification() {
@@ -111,14 +110,10 @@ class ScreenShotService : Service() {
 
         val flags =
             DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
-        Log.d("Prueba Error Pantalla", "2")
 
         mediaProjection.createVirtualDisplay(
             "screen-mirror", mWidth, mHeight, mDensity, flags, mImageReader.surface, null, handler
         )
-        Log.d("Prueba Error Pantalla", "3")
-        Log.d("Prueba Error Pantalla", "$mImageReader")
-
 
         var image: Image? = null
         var cont = 0
@@ -136,7 +131,6 @@ class ScreenShotService : Service() {
             Toast.makeText(
                 this, R.string.string_Error_screenshot, Toast.LENGTH_SHORT
             ).show()
-
         } else {
             val bitmap = Bitmap.createBitmap(
                 image.width, image.height, Bitmap.Config.ARGB_8888
@@ -145,14 +139,52 @@ class ScreenShotService : Service() {
 
             image.close()
             mImageReader.close()
-            saveScreenshotToGallery(this, bitmap)
+
+                if (isQR) {
+                    encodeImage(bitmap)
+                } else if (isSave) {
+                    saveScreenshotToGallery(this, bitmap)
+                }
+
+                isQR=false
+                isSave=false
 
             mediaProjection.stop()
             stopSelf()
         }
     }
 
+    private fun encodeImage(bm: Bitmap)  {
+        mediaProjection.stop()
+        val fileName = "base64Img"
+        val file = File(applicationContext.filesDir, fileName)
+        val baos = ByteArrayOutputStream()
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val b = baos.toByteArray()
+        val base64Img = Base64.encodeToString(b, Base64.DEFAULT)
+
+        try {
+
+            if(!file.exists()){
+                file.createNewFile()
+                file.writeText(base64Img, Charsets.UTF_8)
+            }else {
+                file.delete()
+                file.createNewFile()
+                file.writeText(base64Img, Charsets.UTF_8)
+            }
+
+            Toast.makeText(
+                this, "ScreenShot in BAS64", Toast.LENGTH_SHORT
+            ).show()
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
     private fun saveScreenshotToGallery(context: Context, screenshotBitmap: Bitmap) {
+        mediaProjection.stop()
         val directory =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val marcadorDirectory = File(directory, "Marcador")
@@ -160,7 +192,7 @@ class ScreenShotService : Service() {
         val relativeLocation = Environment.DIRECTORY_PICTURES + File.separator + "Marcador"
 
         GlobalScope.launch(Dispatchers.IO) {
-            mediaProjection.stop()
+            Log.d("TESTSCREEN","Entra1")
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
                 put(MediaStore.Images.Media.MIME_TYPE, "image/png")
@@ -168,18 +200,20 @@ class ScreenShotService : Service() {
                 put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
                 put(MediaStore.Images.Media.RELATIVE_PATH, relativeLocation)
             }
+            Log.d("TESTSCREEN","Entra2")
 
             val imageUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
             if (imageUri != null) {
+                Log.d("TESTSCREEN","Entra3")
+
                 context.contentResolver.openOutputStream(imageUri).use { outputStream ->
                     screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-
                 }
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context, R.string.string_Save_OK, Toast.LENGTH_SHORT
                     ).show()
-
                 }
             } else {
                 withContext(Dispatchers.Main) {
@@ -192,18 +226,17 @@ class ScreenShotService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-
-         fileName = intent.getStringExtra("fileName").toString()
+        fileName = intent.getStringExtra("fileName").toString()
+        isQR=intent.getBooleanExtra("isQr",false)
+        isSave=intent.getBooleanExtra("isSave",false)
 
         showNotification()
 
         if (intent.action == null) {
-
             resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, resultCode)
             resultData = intent.getParcelableExtra(EXTRA_RESULT_INTENT)
 
             mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, resultData!!)
-
 
             takeScreenshot()
         }
@@ -218,6 +251,7 @@ class ScreenShotService : Service() {
     override fun onDestroy() {
         mediaProjection.stop()
 
+        //TODO: Flow emit
         val broadcastIntent = Intent().apply {
             action = ACTION_SCREENSHOT_SERVICE_DESTROYED
         }

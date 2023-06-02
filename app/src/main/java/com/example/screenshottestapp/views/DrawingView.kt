@@ -2,7 +2,6 @@ package com.example.screenshottestapp.views
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -11,15 +10,11 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import com.example.screenshottestapp.MainActivity
-import com.example.screenshottestapp.data.MyCurrentPath
-import com.example.screenshottestapp.data.MyPath
-import com.example.screenshottestapp.services.ScreenShotService
+import com.example.screenshottestapp.data.model.MyCurrentPath
+import com.example.screenshottestapp.data.model.MyPath
+import com.example.screenshottestapp.data.dataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.map
@@ -28,13 +23,15 @@ import kotlinx.coroutines.withContext
 
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
-    private val dataStore = context.dataStore
-    private val myPaths = mutableListOf<MyPath>()
-    private  var colorSelected : Int = 0
-    private var selectedStroke : Int = 0
-    private var savedPath : Path? = null
+    private val colorPref = intPreferencesKey("COLOR_KEY")
+    private val strokePref = intPreferencesKey("STROKE_KEY")
 
-    private  var currentPath : MyCurrentPath = if (myPaths.isNotEmpty()) {
+    private val myPaths = mutableListOf<MyPath>()
+    private var colorSelected: Int = 0
+    private var selectedStroke: Int = 0
+    private var savedPath: Path? = null
+
+    private var currentPath: MyCurrentPath = if (myPaths.isNotEmpty()) {
 
         MyCurrentPath(Path(), Color.BLACK, 8)
 
@@ -51,16 +48,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                 }
             }
         }
+
         MyCurrentPath(Path(), colorSelected, selectedStroke)
     }
 
-    companion object{
-        private val Context.dataStore : DataStore<Preferences> by preferencesDataStore(name = "PICKER_KEY")
-        val colorPref = intPreferencesKey("COLOR_KEY")
-        var strokePref= intPreferencesKey("STROKE_KEY")
-    }
-
-    fun getDataPick() = dataStore.data.map { preferences ->
+    fun getDataPick() = context.dataStore.data.map { preferences ->
         MyPath(
             color = preferences[colorPref] ?: 0,
             stroke = preferences[strokePref] ?: 0,
@@ -68,8 +60,8 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         )
     }
 
-    suspend fun setPick(color: Int,stroke: Int){
-        dataStore.edit{ pref->
+    suspend fun setPick(color: Int, stroke: Int) {
+        context.dataStore.edit { pref ->
             pref[colorPref] = color
             pref[strokePref] = stroke
         }
@@ -89,7 +81,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     }
 
     fun setColor(color: Int) {
-        currentPath.currenColor =  color
+        currentPath.currenColor = color
     }
 
     fun setStroke(stroke: Int) {
@@ -149,5 +141,4 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         }
         return false
     }
-
 }

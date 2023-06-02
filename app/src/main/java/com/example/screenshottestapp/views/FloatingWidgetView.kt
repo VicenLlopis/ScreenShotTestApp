@@ -19,6 +19,8 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
         context, attrs, defStyleAttr
     )
 
+    private val CLICK_DELTA = 200
+
     private val layoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -33,7 +35,7 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
     private var touchY: Float = 0f
     private var clickStartTimer: Long = 0
     private val windowManager: WindowManager
-    private var widgetopen =false
+    private var widgetopen = false
 
     init {
 
@@ -46,10 +48,6 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         windowManager.addView(this, layoutParams)
 
-    }
-
-    companion object {
-        private const val CLICK_DELTA = 200
     }
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
@@ -65,9 +63,9 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
             }
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
-                    widgetopen=true
-                   val intent = Intent(context, MainActivity::class.java)
-                       intent.putExtra("widgetOpen",widgetopen)
+                    widgetopen = true
+                    val intent = Intent(context, MainActivity::class.java)
+                    intent.putExtra("widgetOpen", widgetopen)
                     intent.flags =
                         (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     context.startActivity(intent)

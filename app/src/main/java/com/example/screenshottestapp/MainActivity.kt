@@ -1,7 +1,6 @@
 package com.example.screenshottestapp
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
@@ -22,8 +21,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.*
+import androidx.lifecycle.lifecycleScope
 import com.example.screenshottestapp.services.FloatingWidgetService
-import com.example.screenshottestapp.services.ScreenShotQrService
 import com.example.screenshottestapp.services.ScreenShotService
 import com.example.screenshottestapp.views.DrawingView
 import com.google.zxing.BarcodeFormat
@@ -35,41 +34,40 @@ import com.skydoves.colorpickerview.listeners.ColorListener
 import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var drawingView : DrawingView
+    private lateinit var drawingView: DrawingView
     private lateinit var mediaProjectionManager: MediaProjectionManager
-    private lateinit var one : LinearLayout
-    private lateinit var drawButton : ImageView
-    private lateinit var saveButton : ImageView
-    private lateinit var minimizeButton : ImageView
-    private lateinit var exitButton : ImageView
-    private lateinit var clearButton : ImageView
-    private lateinit var qrButton : ImageView
+    private lateinit var one: LinearLayout
+    private lateinit var drawButton: ImageView
+    private lateinit var saveButton: ImageView
+    private lateinit var minimizeButton: ImageView
+    private lateinit var exitButton: ImageView
+    private lateinit var clearButton: ImageView
+    private lateinit var qrButton: ImageView
     private lateinit var drawOverlaysLauncher: ActivityResultLauncher<Intent>
     private lateinit var screenshotLauncher: ActivityResultLauncher<Intent>
-    private lateinit var screenshot2Launcher: ActivityResultLauncher<Intent>
-    private var writePermisionBool :Boolean = false
-    private lateinit var fileName :String
-    private lateinit var imgView :ImageView
-    private var colorSelected : Int = Color.BLACK
+    private var writePermisionBool: Boolean = false
+    private  var fileName: String=""
+    private lateinit var imgView: ImageView
+    private var colorSelected: Int = Color.BLACK
     private lateinit var selectedButton: ImageButton
-    private lateinit var bttnPicker :Button
-    private lateinit var bttnStrokeS : ImageButton
-    private lateinit var bttnStrokeM : ImageButton
-    private lateinit var bttnStrokeL : ImageButton
-    private lateinit var dialog2 :Dialog
+    private lateinit var bttnPickerOk: Button
+    private lateinit var bttnPickerCancel: Button
+    private lateinit var bttnStrokeS: ImageButton
+    private lateinit var bttnStrokeM: ImageButton
+    private lateinit var bttnStrokeL: ImageButton
+    private lateinit var dialog2: Dialog
     private val selectedColor = Color.BLACK
     private var selectedStroke = stroke_m
-    private val unselectedColor = Color.GRAY
-    private var qrScreenshot =false
+    private val unselectedColor = Color.LTGRAY
     private var isWidget = false
-    private var isOndestroy = false
-    private var widgetOpen=false
+    private var widgetOpen = false
+    private var isQR= false
+    private var isSave=false
 
 
     companion object {
@@ -88,10 +86,9 @@ class MainActivity : AppCompatActivity() {
 
         drawingView = findViewById(R.id.imgView)
 
-        widgetOpen=intent.getBooleanExtra("widgetOpen",false)
-        Log.d("INTENTBOOLEAN","${intent.getBooleanExtra("widgetOpen",false)}")
+        widgetOpen = intent.getBooleanExtra("widgetOpen", false)
         if (!widgetOpen) {
-            GlobalScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch(Dispatchers.IO) {
                 drawingView.setPick(Color.BLACK, stroke_m)
             }
         }
@@ -104,16 +101,15 @@ class MainActivity : AppCompatActivity() {
         exitButton = findViewById(R.id.button_exit)
         qrButton = findViewById(R.id.button_QR)
 
-        val colorPickerLayout = layoutInflater.inflate(R.layout.flag_layout, null)
         val dialog = Dialog(this)
-        dialog.setContentView(colorPickerLayout)
+        dialog.setContentView(R.layout.flag_layout)
         dialog.setCancelable(false)
 
-        bttnStrokeL = colorPickerLayout.findViewById(R.id.bttn_stroke_L)
-        bttnStrokeM = colorPickerLayout.findViewById(R.id.bttn_stroke_M)
-        bttnStrokeS = colorPickerLayout.findViewById(R.id.bttn_stroke_S)
+        bttnStrokeL = dialog.findViewById(R.id.bttn_stroke_L)
+        bttnStrokeM = dialog.findViewById(R.id.bttn_stroke_M)
+        bttnStrokeS = dialog.findViewById(R.id.bttn_stroke_S)
 
-        GlobalScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             drawingView.getDataPick().collect {
                 withContext(Dispatchers.Main) {
                 }
@@ -121,78 +117,87 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        drawButton.setOnClickListener {
+            val colorInPicker = colorSelected
+            val strokeInPicker = selectedStroke
 
-        drawButton.setOnClickListener{
-            val colorPickerView = colorPickerLayout.findViewById<ColorPickerView>(R.id.colorPickerView)
+            val colorPickerView = dialog.findViewById<ColorPickerView>(R.id.colorPickerView)
 
-            bttnPicker = colorPickerLayout.findViewById(R.id.bttn_picker)
-
-            val alphaSlideBar = colorPickerLayout.findViewById<AlphaSlideBar>(R.id.alphaSlideBar)
-            val brightnessSlideBar = colorPickerLayout.findViewById<BrightnessSlideBar>(R.id.brightnessSlide)
-
-
-            Log.d("INTENTSTROKE","Stroke: $selectedStroke")
+            bttnPickerOk = dialog.findViewById(R.id.bttn_picker_OK)
+            bttnPickerCancel = dialog.findViewById(R.id.bttn_picker_Cancel)
+            val alphaSlideBar = dialog.findViewById<AlphaSlideBar>(R.id.alphaSlideBar)
+            val brightnessSlideBar = dialog.findViewById<BrightnessSlideBar>(R.id.brightnessSlide)
 
             when (selectedStroke) {
                 8 -> {
-                    selectedButton =bttnStrokeM
-                    Log.d("INTENTSTROKE","Dentro When Stroke: $selectedStroke")
+                    selectedButton = bttnStrokeM
 
                     selectButton(selectedButton, stroke_m)
                 }
                 3 -> {
-                    selectedButton =bttnStrokeS
-                    Log.d("INTENTSTROKE","Dentro When Stroke: $selectedStroke")
+                    selectedButton = bttnStrokeS
 
                     selectButton(selectedButton, stroke_s)
                 }
                 18 -> {
-                    selectedButton =bttnStrokeL
-                    Log.d("INTENTSTROKE","Dentro When Stroke: $selectedStroke")
+                    selectedButton = bttnStrokeL
 
                     selectButton(selectedButton, stroke_l)
                 }
             }
 
             bttnStrokeL.setOnClickListener {
-                selectedStroke= stroke_l
+                selectedStroke = stroke_l
                 selectButton(bttnStrokeL, selectedStroke)
-                Log.d("INTENTSTROKE","Dentro Cliker Stroke: $selectedStroke")
 
             }
 
             bttnStrokeM.setOnClickListener {
-                selectedStroke= stroke_m
+                selectedStroke = stroke_m
                 selectButton(bttnStrokeM, selectedStroke)
-                Log.d("INTENTSTROKE","Dentro Cliker Stroke: $selectedStroke")
 
             }
 
             bttnStrokeS.setOnClickListener {
                 selectedStroke = stroke_s
                 selectButton(bttnStrokeS, selectedStroke)
-                Log.d("INTENTSTROKE","Dentro Cliker Stroke: $selectedStroke")
 
             }
 
-            GlobalScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch(Dispatchers.IO) {
                 drawingView.getDataPick().collect {
-                        colorSelected = it.color
-                        colorPickerView.setInitialColor(colorSelected)
+                    colorSelected = it.color
+                    colorPickerView.setInitialColor(colorSelected)
                 }
             }
 
-            bttnPicker.setOnClickListener {
-                GlobalScope.launch(Dispatchers.IO) {
+
+            bttnPickerOk.setOnClickListener {
+
+
+                lifecycleScope.launch(Dispatchers.IO) {
                     drawingView.setPick(colorSelected, selectedStroke)
                 }
                 dialog.dismiss()
             }
-
             colorPickerView.setColorListener(ColorListener { color, _ ->
                 colorSelected = color
                 drawingView.setColor(colorSelected)
             })
+
+            bttnPickerCancel.setOnClickListener {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    drawingView.setPick(colorInPicker, strokeInPicker)
+                    drawingView.setColor(colorInPicker)
+                    drawingView.setStroke(strokeInPicker)
+                    selectedStroke = strokeInPicker
+                    colorSelected = colorInPicker
+                }
+                Log.d("TESTINPICKER2", "Color: $colorInPicker, Stroke: $strokeInPicker")
+                dialog.dismiss()
+            }
+
+
 
             colorPickerView.attachBrightnessSlider(brightnessSlideBar)
             colorPickerView.attachAlphaSlider(alphaSlideBar)
@@ -210,6 +215,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         qrButton.setOnClickListener {
+            isQR=true
             showDialogQrButton()
         }
 
@@ -218,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Salir")
                 .setMessage("¿Está seguro de que desea salir de la aplicación?")
                 .setPositiveButton("Sí") { _, _ ->
-                    GlobalScope.launch(Dispatchers.IO) {
+                    lifecycleScope.launch(Dispatchers.IO) {
                         drawingView.setPick(Color.BLACK, stroke_m)
                     }
                     closeApp()
@@ -238,14 +244,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDialogQrButton() {
-        qrScreenshot = true
         one.visibility = View.GONE
 
-        mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionManager =
+            getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
         if (writePermisionBool) {
             val intent = mediaProjectionManager.createScreenCaptureIntent()
-            screenshot2Launcher.launch(intent)
+            screenshotLauncher.launch(intent)
         }
 
         dialog2 = Dialog(this)
@@ -253,7 +259,7 @@ class MainActivity : AppCompatActivity() {
         dialog2.setCancelable(true)
         imgView = dialog2.findViewById(R.id.qr_img)
 
-        val url ="https://www.marca.com/"
+        val url = "https://www.marca.com/"
 
         try {
 
@@ -288,9 +294,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("ResourceType")
-    fun showAlertDialogButtonClicked() {
-
+    private fun showDialogSave() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.layout_dialog)
         dialog.setCancelable(false)
@@ -301,43 +305,56 @@ class MainActivity : AppCompatActivity() {
 
         bttnAccept.setOnClickListener {
             fileName = nameFile.text.toString()
+            isSave=true
             try {
                 one.visibility = View.GONE
             } catch (e: Exception) {
                 Log.d("Error vistaOne", "Error")
             }
-            mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            mediaProjectionManager =
+                getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
             if (writePermisionBool) {
                 val intent = mediaProjectionManager.createScreenCaptureIntent()
                 screenshotLauncher.launch(intent)
             }
             dialog.dismiss()
         }
+
         bttnCancel.setOnClickListener {
             one.visibility = View.VISIBLE
             dialog.dismiss()
         }
+
         dialog.show()
     }
 
     override fun onStart() {
         stopService(Intent(this, FloatingWidgetService::class.java))
         super.onStart()
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION
+            )
             Log.d("Permisos Write", "Pedir permiso")
-        }else{
+        } else {
             writePermisionBool = true
         }
 
-        drawOverlaysLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val resultCode = result.resultCode
-            if (resultCode == Activity.RESULT_OK) {
-                if (isDrawOverlaysAllowed()) {
-                    startFloatingWidgetMaybe()
+        drawOverlaysLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                val resultCode = result.resultCode
+                if (resultCode == Activity.RESULT_OK) {
+                    if (isDrawOverlaysAllowed()) {
+                        startFloatingWidgetMaybe()
+                    }
                 }
             }
-        }
 
         // Verificar y solicitar permisos de dibujar sobre otras aplicaciones
         if (!Settings.canDrawOverlays(this)) {
@@ -345,40 +362,22 @@ class MainActivity : AppCompatActivity() {
             drawOverlaysLauncher.launch(intent)
         }
 
-        screenshot2Launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val resultCode = result.resultCode
-            val data = result.data
-            if (resultCode == Activity.RESULT_OK) {
-                val i = Intent(this, ScreenShotQrService::class.java)
-                    .putExtra(ScreenShotQrService.EXTRA_RESULT_CODE, resultCode)
-                    .putExtra(ScreenShotQrService.EXTRA_RESULT_INTENT, data)
-                Log.d("TestMediaProjection", "$resultCode, $data")
-                startService(i)
-            }
-        }
-
-        if (writePermisionBool) {
-            val intentFilter = IntentFilter().apply {
-                addAction(ScreenShotQrService.ACTION_SCREENSHOT_SERVICE_DESTROYED)
-            }
-            registerReceiver(screenshotServiceQrDestroyedReceiver, intentFilter)
-        }
-
         // Solicitar permisos de captura de pantalla
-        screenshotLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val resultCode = result.resultCode
-            val data = result.data
+        screenshotLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                val resultCode = result.resultCode
+                val data = result.data
+                if (resultCode == Activity.RESULT_OK) {
+                    val i = Intent(this, ScreenShotService::class.java)
+                        .putExtra(ScreenShotService.EXTRA_RESULT_CODE, resultCode)
+                        .putExtra(ScreenShotService.EXTRA_RESULT_INTENT, data)
+                        .putExtra("fileName", fileName)
+                        .putExtra("isQr",isQR)
+                        .putExtra("isSave",isSave)
 
-            if (resultCode == Activity.RESULT_OK) {
-                val i = Intent(this, ScreenShotService::class.java)
-                    .putExtra(ScreenShotService.EXTRA_RESULT_CODE, resultCode)
-                    .putExtra(ScreenShotService.EXTRA_RESULT_INTENT, data)
-                    .putExtra("fileName", fileName)
-                Log.d("TestMediaProjection","$resultCode, $data")
-
-                startService(i)
+                    startService(i)
+                }
             }
-        }
 
         if (writePermisionBool) {
             val intentFilter = IntentFilter().apply {
@@ -388,24 +387,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         one = findViewById<View>(R.id.linearLayout) as LinearLayout
-        Log.d("Error vistaOne","$one")
+        Log.d("Error vistaOne", "$one")
 
         saveButton.setOnClickListener {
-            showAlertDialogButtonClicked()
+            showDialogSave()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(screenshotServiceDestroyedReceiver)
-        unregisterReceiver(screenshotServiceQrDestroyedReceiver)
         stopService(Intent(this, FloatingWidgetService::class.java))
         closeApp()
-        
-
     }
 
-    private fun closeApp(){
+    private fun closeApp() {
         this.finishAffinity()
     }
 
@@ -422,21 +418,20 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == ScreenShotService.ACTION_SCREENSHOT_SERVICE_DESTROYED) {
                 one.visibility = View.VISIBLE
+                if (isQR){
+                    dialog2.show()
+                }
+                isSave=false
+                isQR=false
             }
         }
     }
 
-    private val screenshotServiceQrDestroyedReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == ScreenShotQrService.ACTION_SCREENSHOT_SERVICE_DESTROYED && qrScreenshot) {
-                one.visibility = View.VISIBLE
-                dialog2.show()
-            }
-            qrScreenshot =false
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -446,7 +441,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestForDrawingOverAppsPermission() {
-        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+        val intent =
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+
         startActivityForResult(intent, DRAW_OVERLAYS_PERMISSION_REQUEST_CODE)
     }
 

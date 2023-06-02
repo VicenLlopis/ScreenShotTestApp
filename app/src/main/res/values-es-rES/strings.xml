@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- TODO: AÑADIR IDIOMAS-->
     <string name="app_name">ScreenShotTestApp</string>
     <string name="string_1">¿Desea salir de la aplicacion?</string>
     <string name="string_Acept">Aceptar</string>
