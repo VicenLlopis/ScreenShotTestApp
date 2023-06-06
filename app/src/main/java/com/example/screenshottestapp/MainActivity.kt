@@ -127,6 +127,7 @@ class MainActivity : AppCompatActivity() {
         drawButton.setOnClickListener {
             val colorInPicker = colorSelected
             val strokeInPicker = selectedStroke
+            var buttonNow:ImageButton = bttnStrokeM
 
             val colorPickerView = dialog.findViewById<ColorPickerView>(R.id.colorPickerView)
 
@@ -155,18 +156,21 @@ class MainActivity : AppCompatActivity() {
 
             bttnStrokeL.setOnClickListener {
                 selectedStroke = stroke_l
+                buttonNow=bttnStrokeL
                 selectButton(bttnStrokeL, selectedStroke)
 
             }
 
             bttnStrokeM.setOnClickListener {
                 selectedStroke = stroke_m
+                buttonNow=bttnStrokeM
                 selectButton(bttnStrokeM, selectedStroke)
 
             }
 
             bttnStrokeS.setOnClickListener {
                 selectedStroke = stroke_s
+                buttonNow=bttnStrokeS
                 selectButton(bttnStrokeS, selectedStroke)
 
             }
@@ -196,7 +200,10 @@ class MainActivity : AppCompatActivity() {
                     drawingView.setPick(colorInPicker, strokeInPicker)
                     drawingView.setColor(colorInPicker)
                     drawingView.setStroke(strokeInPicker)
+                    selectedStroke = strokeInPicker
                     colorSelected = colorInPicker
+                    buttonNow.imageTintList = ColorStateList.valueOf(unselectedColor)
+
                 }
                 dialog.dismiss()
             }
@@ -310,7 +317,7 @@ class MainActivity : AppCompatActivity() {
             isSave=true
             try {
                 one.visibility = View.GONE
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
             mediaProjectionManager =
                 getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager

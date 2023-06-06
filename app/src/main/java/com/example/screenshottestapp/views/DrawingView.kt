@@ -81,15 +81,6 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         invalidate()
     }
 
-
-
-    fun isClearDrawing(): Boolean{
-       if(myPaths.size==0){
-           return true
-       }
-        return false
-    }
-
     fun setColor(color: Int) {
         currentPath.currenColor = color
     }
