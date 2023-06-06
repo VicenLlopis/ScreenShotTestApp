@@ -12,7 +12,6 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.*
 import android.provider.Settings
-import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
@@ -20,8 +19,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.datastore.preferences.core.*
 import androidx.lifecycle.lifecycleScope
+import com.example.screenshottestapp.helpers.EmittingObject
+import com.example.screenshottestapp.helpers.Util
 import com.example.screenshottestapp.services.FloatingWidgetService
 import com.example.screenshottestapp.services.ScreenShotService
 import com.example.screenshottestapp.views.DrawingView
@@ -33,9 +33,7 @@ import com.skydoves.colorpickerview.ColorPickerView
 import com.skydoves.colorpickerview.listeners.ColorListener
 import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -69,30 +67,39 @@ class MainActivity : AppCompatActivity() {
     private var isQR= false
     private var isSave=false
 
-
     companion object {
-
         private const val DRAW_OVERLAYS_PERMISSION_REQUEST_CODE = 666
         private const val REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION = 1
         private const val stroke_s = 3
         private const val stroke_m = 8
         private const val stroke_l = 18
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         drawingView = findViewById(R.id.imgView)
 
-        widgetOpen = intent.getBooleanExtra("widgetOpen", false)
+        widgetOpen = intent.getBooleanExtra(Util.keyWidgetOpen, false)
         if (!widgetOpen) {
             lifecycleScope.launch(Dispatchers.IO) {
                 drawingView.setPick(Color.BLACK, stroke_m)
             }
         }
-
+        lifecycleScope.launch(Dispatchers.IO){
+            EmittingObject.eventsDestroyService.collect{
+                launch(Dispatchers.Main) {
+                    if (it == ScreenShotService.ACTION_SCREENSHOT_SERVICE_DESTROYED) {
+                        one.visibility = View.VISIBLE
+                        if (isQR) {
+                            dialog2.show()
+                        }
+                        isSave = false
+                        isQR = false
+                    }
+                }
+            }
+        }
         //Obtener las referencias a los botones y configurar sus listeners
         drawButton = findViewById(R.id.button_draw)
         clearButton = findViewById(R.id.button_clear)
@@ -170,34 +177,29 @@ class MainActivity : AppCompatActivity() {
                     colorPickerView.setInitialColor(colorSelected)
                 }
             }
-
-
+            bttnPickerOk.setText(R.string.string_Acept)
             bttnPickerOk.setOnClickListener {
-
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     drawingView.setPick(colorSelected, selectedStroke)
                 }
                 dialog.dismiss()
             }
+
             colorPickerView.setColorListener(ColorListener { color, _ ->
                 colorSelected = color
                 drawingView.setColor(colorSelected)
             })
-
+            bttnPickerCancel.setText(R.string.string_Cancel)
             bttnPickerCancel.setOnClickListener {
                 lifecycleScope.launch(Dispatchers.IO) {
                     drawingView.setPick(colorInPicker, strokeInPicker)
                     drawingView.setColor(colorInPicker)
                     drawingView.setStroke(strokeInPicker)
-                    selectedStroke = strokeInPicker
                     colorSelected = colorInPicker
                 }
-                Log.d("TESTINPICKER2", "Color: $colorInPicker, Stroke: $strokeInPicker")
                 dialog.dismiss()
             }
-
-
 
             colorPickerView.attachBrightnessSlider(brightnessSlideBar)
             colorPickerView.attachAlphaSlider(alphaSlideBar)
@@ -221,15 +223,15 @@ class MainActivity : AppCompatActivity() {
 
         exitButton.setOnClickListener {
             AlertDialog.Builder(this)
-                .setTitle("Salir")
-                .setMessage("¿Está seguro de que desea salir de la aplicación?")
-                .setPositiveButton("Sí") { _, _ ->
+                .setTitle(R.string.string_Exit_Title)
+                .setMessage(R.string.string_Exit_Message)
+                .setPositiveButton(R.string.string_Acept) { _, _ ->
                     lifecycleScope.launch(Dispatchers.IO) {
                         drawingView.setPick(Color.BLACK, stroke_m)
                     }
                     closeApp()
                 }
-                .setNegativeButton("No", null)
+                .setNegativeButton(R.string.string_Cancel, null)
                 .show()
         }
     }
@@ -309,7 +311,6 @@ class MainActivity : AppCompatActivity() {
             try {
                 one.visibility = View.GONE
             } catch (e: Exception) {
-                Log.d("Error vistaOne", "Error")
             }
             mediaProjectionManager =
                 getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
@@ -341,7 +342,6 @@ class MainActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION
             )
-            Log.d("Permisos Write", "Pedir permiso")
         } else {
             writePermisionBool = true
         }
@@ -371,23 +371,16 @@ class MainActivity : AppCompatActivity() {
                     val i = Intent(this, ScreenShotService::class.java)
                         .putExtra(ScreenShotService.EXTRA_RESULT_CODE, resultCode)
                         .putExtra(ScreenShotService.EXTRA_RESULT_INTENT, data)
-                        .putExtra("fileName", fileName)
-                        .putExtra("isQr",isQR)
-                        .putExtra("isSave",isSave)
+                        .putExtra(Util.keyFileName, fileName)
+                        .putExtra(Util.keyIsQr,isQR)
+                        .putExtra(Util.keyIsSave,isSave)
 
                     startService(i)
                 }
             }
 
-        if (writePermisionBool) {
-            val intentFilter = IntentFilter().apply {
-                addAction(ScreenShotService.ACTION_SCREENSHOT_SERVICE_DESTROYED)
-            }
-            registerReceiver(screenshotServiceDestroyedReceiver, intentFilter)
-        }
 
         one = findViewById<View>(R.id.linearLayout) as LinearLayout
-        Log.d("Error vistaOne", "$one")
 
         saveButton.setOnClickListener {
             showDialogSave()
@@ -396,7 +389,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(screenshotServiceDestroyedReceiver)
         stopService(Intent(this, FloatingWidgetService::class.java))
         closeApp()
     }
@@ -414,18 +406,8 @@ class MainActivity : AppCompatActivity() {
         requestForDrawingOverAppsPermission()
     }
 
-    private val screenshotServiceDestroyedReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == ScreenShotService.ACTION_SCREENSHOT_SERVICE_DESTROYED) {
-                one.visibility = View.VISIBLE
-                if (isQR){
-                    dialog2.show()
-                }
-                isSave=false
-                isQR=false
-            }
-        }
-    }
+
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

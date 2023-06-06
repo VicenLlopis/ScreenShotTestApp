@@ -11,6 +11,9 @@
     <string name="img_name">Image name :</string>
     <string name="img_path">Image Path:</string>
     <string name="base64_qr_ok">Screenshot to Base64</string>
+    <string name="string_Exit_Title">Exit</string>
+    <string name="string_Exit_Message">Are you sure you want to exit the application?</string>
+    <string name="string_Qr_Message_Ok">ScreenShot in BAS64</string>
 
 
 </resources>

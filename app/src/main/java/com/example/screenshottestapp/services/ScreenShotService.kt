@@ -24,13 +24,14 @@ import android.view.WindowManager
 import android.widget.Toast
 import com.example.screenshottestapp.MainActivity
 import com.example.screenshottestapp.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.example.screenshottestapp.helpers.EmittingObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import com.example.screenshottestapp.helpers.Util
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 
 class ScreenShotService : Service() {
 
@@ -42,16 +43,13 @@ class ScreenShotService : Service() {
     private var isQR= false
     private var isSave=false
 
-
     companion object {
-
         const val ACTION_SCREENSHOT_SERVICE_DESTROYED =
             "com.example.ACTION_SCREENSHOT_SERVICE_DESTROYED"
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_RESULT_INTENT = "resultIntent"
         private const val ONGOING_NOTIFICATION_ID = 123
         private const val CHANNEL_DEFAULT_IMPORTANCE = "1"
-
     }
 
     override fun onCreate() {
@@ -64,7 +62,7 @@ class ScreenShotService : Service() {
         createNotification()
 
         mediaProjectionManager =
-            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     }
 
     private fun createNotification() {
@@ -95,7 +93,7 @@ class ScreenShotService : Service() {
     @SuppressLint("WrongConstant")
     private fun takeScreenshot() {
         Log.d("Prueba Error Pantalla", "1")
-        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = windowManager.defaultDisplay
         val metrics = DisplayMetrics()
         display.getMetrics(metrics)
@@ -175,7 +173,7 @@ class ScreenShotService : Service() {
             }
 
             Toast.makeText(
-                this, "ScreenShot in BAS64", Toast.LENGTH_SHORT
+                this, R.string.string_Qr_Message_Ok, Toast.LENGTH_SHORT
             ).show()
 
         } catch (e: IOException) {
@@ -189,9 +187,10 @@ class ScreenShotService : Service() {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         val marcadorDirectory = File(directory, "Marcador")
         marcadorDirectory.mkdirs()
+
         val relativeLocation = Environment.DIRECTORY_PICTURES + File.separator + "Marcador"
 
-        GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.launch(Dispatchers.IO) {
             Log.d("TESTSCREEN","Entra1")
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
@@ -200,9 +199,12 @@ class ScreenShotService : Service() {
                 put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
                 put(MediaStore.Images.Media.RELATIVE_PATH, relativeLocation)
             }
+
             Log.d("TESTSCREEN","Entra2")
 
             val imageUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+                Log.d("TESTIMAGEURI","${imageUri?.path}")
 
             if (imageUri != null) {
                 Log.d("TESTSCREEN","Entra3")
@@ -210,6 +212,7 @@ class ScreenShotService : Service() {
                 context.contentResolver.openOutputStream(imageUri).use { outputStream ->
                     screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                 }
+
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context, R.string.string_Save_OK, Toast.LENGTH_SHORT
@@ -226,9 +229,9 @@ class ScreenShotService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        fileName = intent.getStringExtra("fileName").toString()
-        isQR=intent.getBooleanExtra("isQr",false)
-        isSave=intent.getBooleanExtra("isSave",false)
+        fileName = intent.getStringExtra(Util.keyFileName).toString()
+        isQR=intent.getBooleanExtra(Util.keyIsQr,false)
+        isSave=intent.getBooleanExtra(Util.keyIsSave,false)
 
         showNotification()
 
@@ -248,13 +251,12 @@ class ScreenShotService : Service() {
         return null
     }
 
+
     override fun onDestroy() {
         mediaProjection.stop()
 
-        //TODO: Flow emit
-        val broadcastIntent = Intent().apply {
-            action = ACTION_SCREENSHOT_SERVICE_DESTROYED
+        GlobalScope.launch(Dispatchers.IO) {
+            EmittingObject.produceEvent(ACTION_SCREENSHOT_SERVICE_DESTROYED)
         }
-        sendBroadcast(broadcastIntent)
     }
 }

@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.datastore.preferences.core.edit
@@ -15,6 +14,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import com.example.screenshottestapp.data.model.MyCurrentPath
 import com.example.screenshottestapp.data.model.MyPath
 import com.example.screenshottestapp.data.dataStore
+import com.example.screenshottestapp.helpers.Util
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.map
@@ -23,13 +23,14 @@ import kotlinx.coroutines.withContext
 
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
-    private val colorPref = intPreferencesKey("COLOR_KEY")
-    private val strokePref = intPreferencesKey("STROKE_KEY")
+    private val colorPref = intPreferencesKey(Util.keyDataStoreColor)
+    private val strokePref = intPreferencesKey(Util.keyDataStoreStroke)
 
-    private val myPaths = mutableListOf<MyPath>()
+    val myPaths = mutableListOf<MyPath>()
     private var colorSelected: Int = 0
     private var selectedStroke: Int = 0
     private var savedPath: Path? = null
+
 
     private var currentPath: MyCurrentPath = if (myPaths.isNotEmpty()) {
 
@@ -52,6 +53,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         MyCurrentPath(Path(), colorSelected, selectedStroke)
     }
 
+
     fun getDataPick() = context.dataStore.data.map { preferences ->
         MyPath(
             color = preferences[colorPref] ?: 0,
@@ -65,7 +67,6 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
             pref[colorPref] = color
             pref[strokePref] = stroke
         }
-        Log.d("TESTPICKER", "Color: $color, Stroke: $stroke")
     }
 
     private val paint = Paint().apply {
@@ -80,6 +81,15 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         invalidate()
     }
 
+
+
+    fun isClearDrawing(): Boolean{
+       if(myPaths.size==0){
+           return true
+       }
+        return false
+    }
+
     fun setColor(color: Int) {
         currentPath.currenColor = color
     }
@@ -88,7 +98,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         currentPath.currenStroke = stroke
     }
 
-    fun setPath(path: Path) {
+    private fun setPath(path: Path) {
         currentPath.path = path
     }
 

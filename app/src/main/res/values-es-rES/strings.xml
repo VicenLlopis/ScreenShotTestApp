@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- TODO: AÑADIR IDIOMAS-->
+
     <string name="app_name">ScreenShotTestApp</string>
     <string name="string_1">¿Desea salir de la aplicacion?</string>
     <string name="string_Acept">Aceptar</string>
@@ -12,4 +12,9 @@
     <string name="img_name">Nombre de la imagen:</string>
     <string name="img_path">Ruta del Archivo:</string>
     <string name="base64_qr_ok">Captura a Base64</string>
+    <string name="string_Exit_Title">Salir</string>
+    <string name="string_Exit_Message">¿Está seguro de que desea salir de la aplicación?</string>
+    <string name="string_Qr_Message_Ok">Captura a BASE64</string>
+
+
 </resources>

@@ -10,6 +10,7 @@ import android.view.WindowManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.screenshottestapp.MainActivity
 import com.example.screenshottestapp.R
+import com.example.screenshottestapp.helpers.Util
 
 class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
@@ -52,6 +53,7 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         when (event.action) {
+
             MotionEvent.ACTION_DOWN -> {
                 clickStartTimer = System.currentTimeMillis()
 
@@ -61,16 +63,18 @@ class FloatingWidgetView : ConstraintLayout, View.OnTouchListener {
                 touchX = event.rawX
                 touchY = event.rawY
             }
+
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - clickStartTimer < CLICK_DELTA) {
                     widgetopen = true
                     val intent = Intent(context, MainActivity::class.java)
-                    intent.putExtra("widgetOpen", widgetopen)
+                    intent.putExtra(Util.keyWidgetOpen, widgetopen)
                     intent.flags =
                         (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     context.startActivity(intent)
                 }
             }
+
             MotionEvent.ACTION_MOVE -> {
                 layoutParams.x = (x + event.rawX - touchX).toInt()
                 layoutParams.y = (y + event.rawY - touchY).toInt()
