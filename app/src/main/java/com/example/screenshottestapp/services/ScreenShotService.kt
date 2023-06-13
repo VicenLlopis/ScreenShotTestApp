@@ -22,6 +22,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.view.ContentInfoCompat.Flags
 import com.example.screenshottestapp.MainActivity
 import com.example.screenshottestapp.R
 import com.example.screenshottestapp.helpers.EmittingObject
@@ -30,7 +31,6 @@ import java.io.File
 import java.io.IOException
 import com.example.screenshottestapp.helpers.Util
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 
 class ScreenShotService : Service() {
@@ -40,8 +40,12 @@ class ScreenShotService : Service() {
     private var resultCode = 0
     private var resultData: Intent? = null
     private lateinit var fileName : String
+    private lateinit var pathName :String
     private var isQR= false
     private var isSave=false
+    private var isJpg= false
+    private var isPng=false
+    private var isScreenSaved =false
 
     companion object {
         const val ACTION_SCREENSHOT_SERVICE_DESTROYED =
@@ -63,6 +67,8 @@ class ScreenShotService : Service() {
 
         mediaProjectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+
+
     }
 
     private fun createNotification() {
@@ -92,7 +98,6 @@ class ScreenShotService : Service() {
 
     @SuppressLint("WrongConstant")
     private fun takeScreenshot() {
-        Log.d("Prueba Error Pantalla", "1")
         val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = windowManager.defaultDisplay
         val metrics = DisplayMetrics()
@@ -116,40 +121,30 @@ class ScreenShotService : Service() {
         var image: Image? = null
         var cont = 0
         while (image == null || cont == 5) {
-            Log.d("PRUEBATEST", "cont: $cont")
             Thread.sleep(300)
             image = mImageReader.acquireLatestImage()
             cont++
         }
 
-        if (image == null) {
-            mImageReader.close()
-            mediaProjection.stop()
-            stopSelf()
-            Toast.makeText(
-                this, R.string.string_Error_screenshot, Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            val bitmap = Bitmap.createBitmap(
-                image.width, image.height, Bitmap.Config.ARGB_8888
-            )
-            bitmap.copyPixelsFromBuffer(image.planes[0].buffer)
+        val bitmap = Bitmap.createBitmap(
+            image.width, image.height, Bitmap.Config.ARGB_8888
+        )
+        bitmap.copyPixelsFromBuffer(image.planes[0].buffer)
 
-            image.close()
-            mImageReader.close()
+        image.close()
+        mImageReader.close()
 
-                if (isQR) {
-                    encodeImage(bitmap)
-                } else if (isSave) {
-                    saveScreenshotToGallery(this, bitmap)
-                }
-
-                isQR=false
-                isSave=false
-
-            mediaProjection.stop()
-            stopSelf()
+        if (isQR) {
+            encodeImage(bitmap)
+        } else if (isSave) {
+            saveScreenshotToGallery(this, bitmap)
         }
+
+        isQR=false
+        isSave=false
+
+        mediaProjection.stop()
+        stopSelf()
     }
 
     private fun encodeImage(bm: Bitmap)  {
@@ -185,39 +180,54 @@ class ScreenShotService : Service() {
         mediaProjection.stop()
         val directory =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        val marcadorDirectory = File(directory, "Marcador")
+        val marcadorDirectory = File(directory, pathName)
         marcadorDirectory.mkdirs()
 
-        val relativeLocation = Environment.DIRECTORY_PICTURES + File.separator + "Marcador"
+        val relativeLocation = Environment.DIRECTORY_PICTURES + File.separator + pathName
+
 
             GlobalScope.launch(Dispatchers.IO) {
-            Log.d("TESTSCREEN","Entra1")
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-                put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-                put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
-                put(MediaStore.Images.Media.RELATIVE_PATH, relativeLocation)
-            }
 
-            Log.d("TESTSCREEN","Entra2")
+                    val contentValues = ContentValues().apply {
+
+                        put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                        put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
+                        put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+                        put(MediaStore.Images.Media.RELATIVE_PATH, relativeLocation)
+                        if (isPng) {
+                            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                        }
+                        if (isJpg){
+                            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        }
+                    }
 
             val imageUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
 
-                Log.d("TESTIMAGEURI","${imageUri?.path}")
 
             if (imageUri != null) {
-                Log.d("TESTSCREEN","Entra3")
 
                 context.contentResolver.openOutputStream(imageUri).use { outputStream ->
                     screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                 }
 
+                isScreenSaved=true
+                val i = Intent(context, MainActivity::class.java)
+                i.putExtra(Util.keyscreenSaved,isScreenSaved)
+                i.flags =
+                    (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                context.startActivity(i)
+
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context, R.string.string_Save_OK, Toast.LENGTH_SHORT
-                    ).show()
+
+
+                  /*  var dialog3=Dialog(context)
+                    dialog3.setContentView(R.layout.saved_imagen)
+                    dialog3.setTitle(R.string.image_saved)
+                    dialog3.show()*/
+
                 }
+
             } else {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -229,9 +239,13 @@ class ScreenShotService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+
         fileName = intent.getStringExtra(Util.keyFileName).toString()
         isQR=intent.getBooleanExtra(Util.keyIsQr,false)
-        isSave=intent.getBooleanExtra(Util.keyIsSave,false)
+        isSave=intent.getBooleanExtra(Util.keyIsOnSave,false)
+        isJpg=intent.getBooleanExtra(Util.keyJpg,false)
+        isPng=intent.getBooleanExtra(Util.keyPng,false)
+        pathName= intent.getStringExtra(Util.keyPathName).toString()
 
         showNotification()
 
@@ -251,8 +265,8 @@ class ScreenShotService : Service() {
         return null
     }
 
-
     override fun onDestroy() {
+        isScreenSaved=false
         mediaProjection.stop()
 
         GlobalScope.launch(Dispatchers.IO) {

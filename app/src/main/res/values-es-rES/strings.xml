@@ -2,19 +2,28 @@
 <resources>
 
     <string name="app_name">ScreenShotTestApp</string>
-    <string name="string_1">¿Desea salir de la aplicacion?</string>
-    <string name="string_Acept">Aceptar</string>
-    <string name="string_Cancel">Cancelar</string>
     <string name="string_Save">¿Desea Guardar la captura de pantalla?</string>
     <string name="string_Error_screenshot">Error al intentar capturar la pantalla</string>
     <string name="string_Save_OK">Captura de pantalla guardado en la galería de fotos</string>
     <string name="string_Save_ERROR">No se ha podido guardar la captura </string>
     <string name="img_name">Nombre de la imagen:</string>
     <string name="img_path">Ruta del Archivo:</string>
-    <string name="base64_qr_ok">Captura a Base64</string>
     <string name="string_Exit_Title">Salir</string>
     <string name="string_Exit_Message">¿Está seguro de que desea salir de la aplicación?</string>
     <string name="string_Qr_Message_Ok">Captura a BASE64</string>
-
+    <string name="save_imagen">Guardar imagen:</string>
+    <string name="image_name">Nombre de la imagen:</string>
+    <string name="file_path">Ruta del archivo:</string>
+    <string name="pictures">/Pictures/</string>
+    <string name="cancel">Cancelar</string>
+    <string name="accept">Aceptar</string>
+    <string name="stroke">Trazo :</string>
+    <string name="image_saved">Imagen guardada</string>
+    <string name="image_saved_text">La imagen se ha guardado correctamente</string>
+    <string name="jpg">JPG</string>
+    <string name="png">PNG</string>
+    <string name="name_empty">El nombre no puede estar vacio</string>
+    <string name="chose_file_type">Elige entre jpg o png</string>
+    <string name="default_path">/Pictures/ORBYSMarker</string>
 
 </resources>

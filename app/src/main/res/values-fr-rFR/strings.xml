@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScreenShotTestApp</string>
+    <string name="string_Save">Voulez-vous enregistrer l\'écran?</string>
+    <string name="string_Error_screenshot">Erreur lors de la tentative de capture d\'écran</string>
+    <string name="string_Save_OK" >Capture d\'écran enregistrée </string>
+    <string name="string_Save_ERROR">Échec de l\'enregistrement de la capture </string>
+    <string name="img_name">Nom de l\'image :</string>
+    <string name="img_path">Route de l\'image:</string>
+    <string name="string_Exit_Title">Sortie</string>
+    <string name="string_Exit_Message">Voulez-vous vraiment quitter l\'application?</string>
+    <string name="string_Qr_Message_Ok">Capture d\'écran en BAS64</string>
+    <string name="save_imagen">Enregistrer l\'image</string>
+    <string name="image_name">Nom de l\'image:</string>
+    <string name="file_path">Chemin du fichier:</string>
+    <string name="pictures">/Pictures/</string>
+    <string name="cancel">Annuler</string>
+    <string name="accept">Accepter</string>
+    <string name="stroke">Traînée :</string>
+    <string name="image_saved">Image enregistrée</string>
+    <string name="image_saved_text">Fichier image enregistré avec succès </string>
+    <string name="jpg">JPG</string>
+    <string name="png">PNG</string>
+    <string name="name_empty">Le nom ne peut pas être vide</string>
+    <string name="chose_file_type" >Choisissez entre jpg ou png</string>
+    <string name="default_path">/Pictures/ORBYSMarker</string>
+</resources>

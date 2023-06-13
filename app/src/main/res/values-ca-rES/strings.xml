@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScreenShotTestApp</string>
+    <string name="string_Save">Vols desar la pantalla?</string>
+    <string name="string_Error_screenshot">S\'ha produït un error en intentar capturar la pantalla</string>
+    <string name="string_Save_OK" >Captura de pantalla desada</string>
+    <string name="string_Save_ERROR">No s\'ha pogut desar la captura</string>
+    <string name="img_name">Nom de la imatge :</string>
+    <string name="img_path">Direcció de la imatge :</string>
+    <string name="string_Exit_Title">Sortir</string>
+    <string name="string_Exit_Message">Esteu segur que voleu sortir de l\'aplicació?</string>
+    <string name="string_Qr_Message_Ok">Captura de pantalla a Base64</string>
+    <string name="save_imagen">Guardar imatge</string>
+    <string name="image_name">Nom de la imatge :</string>
+    <string name="file_path">Direcció de la imatge :</string>
+    <string name="pictures">/Pictures/</string>
+    <string name="cancel">Cancelar</string>
+    <string name="accept">Acceptar</string>
+    <string name="stroke">Traços :</string>
+    <string name="image_saved">Imatge guardada</string>
+    <string name="image_saved_text">El fitxer d\'imatge s\'ha desat correctament</string>
+    <string name="jpg">JPG</string>
+    <string name="png">PNG</string>
+    <string name="name_empty">El nom no pot estar buit</string>
+    <string name="chose_file_type" >Tria entre jpg o png</string>
+    <string name="default_path">/Pictures/ORBYSMarker</string>
+</resources>

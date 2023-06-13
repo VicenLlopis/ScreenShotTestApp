@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ScreenShotTestApp</string>
+    <string name="string_Save">Doriți să salvați ecranul?</string>
+    <string name="string_Error_screenshot">Eroare la încercarea de a captura ecranul</string>
+    <string name="string_Save_OK" >Captură de ecran salvată </string>
+    <string name="string_Save_ERROR">Nu s-a salvat captura </string>
+    <string name="img_name">Nume imagine :</string>
+    <string name="img_path">Calea imaginii :</string>
+    <string name="string_Exit_Title">Exit</string>
+    <string name="string_Exit_Message">Sigur doriți să părăsiți aplicația?</string>
+    <string name="string_Qr_Message_Ok">Captură de ecran în BAS64</string>
+    <string name="save_imagen">Salvează imaginea</string>
+    <string name="image_name">Nume imagine :</string>
+    <string name="file_path">Calea imaginii :</string>
+    <string name="pictures">/Pictures/</string>
+    <string name="cancel">Anulare</string>
+    <string name="accept">Accept</string>
+    <string name="stroke">Dâră :</string>
+    <string name="image_saved">Imagine salvată</string>
+    <string name="image_saved_text">Fișierul imagine a fost salvat cu succes</string>
+    <string name="jpg">JPG</string>
+    <string name="png">PNG</string>
+    <string name="name_empty">Numele nu poate fi gol</string>
+    <string name="chose_file_type" >Alegeți între jpg sau png</string>
+
+</resources>

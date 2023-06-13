@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var screenshotLauncher: ActivityResultLauncher<Intent>
     private var writePermisionBool: Boolean = false
     private  var fileName: String=""
+    private var pathName :String=""
     private lateinit var imgView: ImageView
     private var colorSelected: Int = Color.BLACK
     private lateinit var selectedButton: ImageButton
@@ -64,14 +65,22 @@ class MainActivity : AppCompatActivity() {
     private val unselectedColor = Color.LTGRAY
     private var isWidget = false
     private var widgetOpen = false
+    private var screenSaved = false
     private var isQR= false
     private var isSave=false
+    private var isJpg= false
+    private var isPng=false
+    private  var colorInPicker :Int=0
+    private var strokeInPicker :Int=0
+    private var buttonNow: ImageButton? =null
+
+
 
     companion object {
         private const val DRAW_OVERLAYS_PERMISSION_REQUEST_CODE = 666
         private const val REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION = 1
         private const val stroke_s = 3
-        private const val stroke_m = 8
+        const val stroke_m = 8
         private const val stroke_l = 18
     }
 
@@ -81,11 +90,14 @@ class MainActivity : AppCompatActivity() {
         drawingView = findViewById(R.id.imgView)
 
         widgetOpen = intent.getBooleanExtra(Util.keyWidgetOpen, false)
+        screenSaved =intent.getBooleanExtra(Util.keyscreenSaved,false)
+
         if (!widgetOpen) {
             lifecycleScope.launch(Dispatchers.IO) {
                 drawingView.setPick(Color.BLACK, stroke_m)
             }
         }
+        
         lifecycleScope.launch(Dispatchers.IO){
             EmittingObject.eventsDestroyService.collect{
                 launch(Dispatchers.Main) {
@@ -100,6 +112,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        if(screenSaved) {
+            var dialog3=Dialog(this)
+            dialog3.setContentView(R.layout.saved_imagen)
+            dialog3.setTitle(R.string.image_saved)
+            var txtvTitulo = dialog3.findViewById<TextView>(R.id.txtsave_image)
+            var txtvString =  dialog3.findViewById<TextView>(R.id.textSaved_image_text)
+
+            txtvString.setText(R.string.image_saved_text)
+            txtvTitulo.setText(R.string.image_saved)
+
+            dialog3.show()
+        }
+
         //Obtener las referencias a los botones y configurar sus listeners
         drawButton = findViewById(R.id.button_draw)
         clearButton = findViewById(R.id.button_clear)
@@ -125,9 +151,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         drawButton.setOnClickListener {
-            val colorInPicker = colorSelected
-            val strokeInPicker = selectedStroke
-            var buttonNow:ImageButton = bttnStrokeM
+
+             colorInPicker = colorSelected
+             strokeInPicker = selectedStroke
+             buttonNow= bttnStrokeM
 
             val colorPickerView = dialog.findViewById<ColorPickerView>(R.id.colorPickerView)
 
@@ -181,7 +208,7 @@ class MainActivity : AppCompatActivity() {
                     colorPickerView.setInitialColor(colorSelected)
                 }
             }
-            bttnPickerOk.setText(R.string.string_Acept)
+            bttnPickerOk.setText(R.string.accept)
             bttnPickerOk.setOnClickListener {
 
                 lifecycleScope.launch(Dispatchers.IO) {
@@ -194,18 +221,12 @@ class MainActivity : AppCompatActivity() {
                 colorSelected = color
                 drawingView.setColor(colorSelected)
             })
-            bttnPickerCancel.setText(R.string.string_Cancel)
+            bttnPickerCancel.setText(R.string.cancel)
             bttnPickerCancel.setOnClickListener {
-                lifecycleScope.launch(Dispatchers.IO) {
-                    drawingView.setPick(colorInPicker, strokeInPicker)
-                    drawingView.setColor(colorInPicker)
-                    drawingView.setStroke(strokeInPicker)
-                    selectedStroke = strokeInPicker
-                    colorSelected = colorInPicker
-                    buttonNow.imageTintList = ColorStateList.valueOf(unselectedColor)
 
-                }
+                cancelPicker()
                 dialog.dismiss()
+
             }
 
             colorPickerView.attachBrightnessSlider(brightnessSlideBar)
@@ -232,14 +253,24 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle(R.string.string_Exit_Title)
                 .setMessage(R.string.string_Exit_Message)
-                .setPositiveButton(R.string.string_Acept) { _, _ ->
+                .setPositiveButton(R.string.accept) { _, _ ->
                     lifecycleScope.launch(Dispatchers.IO) {
                         drawingView.setPick(Color.BLACK, stroke_m)
                     }
                     closeApp()
                 }
-                .setNegativeButton(R.string.string_Cancel, null)
+                .setNegativeButton(R.string.cancel, null)
                 .show()
+        }
+    }
+    private fun cancelPicker(){
+        lifecycleScope.launch(Dispatchers.IO) {
+            drawingView.setPick(colorInPicker, strokeInPicker)
+            drawingView.setColor(colorInPicker)
+            drawingView.setStroke(strokeInPicker)
+            selectedStroke = strokeInPicker
+            colorSelected = colorInPicker
+            buttonNow?.imageTintList = ColorStateList.valueOf(unselectedColor)
         }
     }
 
@@ -311,22 +342,57 @@ class MainActivity : AppCompatActivity() {
         val nameFile: EditText = dialog.findViewById(R.id.editText)
         val bttnCancel = dialog.findViewById<Button>(R.id.button)
         val bttnAccept = dialog.findViewById<Button>(R.id.button2)
+        val namePath: EditText = dialog.findViewById(R.id.editText2)
+        val radiobttnJpg = dialog.findViewById<RadioButton>(R.id.radio_button_jpg)
+        val radiobttnPng = dialog.findViewById<RadioButton>(R.id.radio_button_png)
+
+
+
+        radiobttnPng.isActivated
+        radiobttnPng.setOnClickListener {
+            isPng=true
+        }
+        radiobttnJpg.setOnClickListener {
+            isJpg=true
+        }
 
         bttnAccept.setOnClickListener {
             fileName = nameFile.text.toString()
-            isSave=true
-            try {
-                one.visibility = View.GONE
-            } catch (_: Exception) {
+            pathName = namePath.text.toString()
+            if (pathName==""){
+                pathName="ORBYSmarker"
+            }else if(pathName==null){
+                pathName="ORBYSmarker"
             }
-            mediaProjectionManager =
-                getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            if (writePermisionBool) {
-                val intent = mediaProjectionManager.createScreenCaptureIntent()
-                screenshotLauncher.launch(intent)
+            if (fileName != "") {
+                if (isJpg or isPng) {
+                    isSave = true
+                    try {
+                        one.visibility = View.GONE
+                    } catch (_: Exception) {
+                    }
+                    mediaProjectionManager =
+                        getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                    if (writePermisionBool) {
+                        val intent = mediaProjectionManager.createScreenCaptureIntent()
+                        screenshotLauncher.launch(intent)
+                    }
+                    dialog.dismiss()
+                }else{
+                    Toast.makeText(
+                        this, R.string.chose_file_type, Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+
+            }else{
+                Toast.makeText(
+                    this, R.string.name_empty, Toast.LENGTH_SHORT
+                ).show()
             }
-            dialog.dismiss()
         }
+
+
 
         bttnCancel.setOnClickListener {
             one.visibility = View.VISIBLE
@@ -380,7 +446,10 @@ class MainActivity : AppCompatActivity() {
                         .putExtra(ScreenShotService.EXTRA_RESULT_INTENT, data)
                         .putExtra(Util.keyFileName, fileName)
                         .putExtra(Util.keyIsQr,isQR)
-                        .putExtra(Util.keyIsSave,isSave)
+                        .putExtra(Util.keyIsOnSave,isSave)
+                        .putExtra(Util.keyPng,isPng)
+                        .putExtra(Util.keyJpg,isJpg)
+                        .putExtra(Util.keyPathName,pathName)
 
                     startService(i)
                 }

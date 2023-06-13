@@ -1,19 +1,30 @@
+
 <resources>
 
     <string name="app_name">ScreenShotTestApp</string>
-    <string name="string_1">Do you want to exit the application?</string>
-    <string name="string_Acept">Acept</string>
-    <string name="string_Cancel">Cancel</string>
     <string name="string_Save">Do you want to save the Screen?</string>
     <string name="string_Error_screenshot">Error trying to capture screen</string>
-    <string name="string_Save_OK">Sceenshot Saved </string>
+    <string name="string_Save_OK" >Sceenshot Saved </string>
     <string name="string_Save_ERROR">Failed to save capture </string>
     <string name="img_name">Image name :</string>
-    <string name="img_path">Image Path:</string>
-    <string name="base64_qr_ok">Screenshot to Base64</string>
+    <string name="img_path">Image Path :</string>
     <string name="string_Exit_Title">Exit</string>
     <string name="string_Exit_Message">Are you sure you want to exit the application?</string>
     <string name="string_Qr_Message_Ok">ScreenShot in BAS64</string>
+    <string name="save_imagen">Save image</string>
+    <string name="image_name">Image name:</string>
+    <string name="file_path">File path:</string>
+    <string name="pictures">/Pictures/</string>
+    <string name="cancel">Cancel</string>
+    <string name="accept">Accept</string>
+    <string name="stroke">Stroke :</string>
+    <string name="image_saved">Image Saved</string>
+    <string name="image_saved_text">Image file saved successful</string>
+    <string name="jpg">JPG</string>
+    <string name="png">PNG</string>
+    <string name="name_empty">The name cannot be empty</string>
+    <string name="chose_file_type" >Choose between jpg or png</string>
+    <string name="default_path">/Pictures/ORBYSMarker</string>
 
 
 </resources>
